@@ -1,31 +1,31 @@
 {
 	"name": "search-my-gitlab",
-	"version": "0.0.1",
+	"version": "0.2.0",
 	"description": "An interface for searching all of your Gitlab repositories at once, since this is a feature not available in standard Gitlab.",
 	"productName": "Search My Gitlab",
 	"author": "Matt Winn <mateowinn@gmail.com>",
 	"private": true,
 	"scripts": {
-		"lint": "eslint --ext .js,.ts,.vue ./",
+		"lint": "eslint --ext .js,.vue ./ --color",
+		"precommit-msg": "echo 'Pre-commit checks...' && exit 0",
 		"start": "quasar dev -m pwa",
-		"test": "echo \"No test specified\" && exit 0"
+		"test": "jest",
+		"test:silent": "jest --silent"
 	},
 	"dependencies": {
 		"@quasar/extras": "^1.0.0",
-		"@vue/composition-api": "^1.0.0-rc.3",
 		"axios": "^0.21.1",
 		"core-js": "^3.6.5",
 		"quasar": "^1.0.0"
 	},
 	"devDependencies": {
 		"@quasar/app": "^2.0.0",
-		"@types/node": "^10.17.15",
-		"@typescript-eslint/eslint-plugin": "^4.16.1",
-		"@typescript-eslint/parser": "^4.16.1",
 		"babel-eslint": "^10.0.1",
 		"eslint": "^7.21.0",
 		"eslint-config-prettier": "^8.1.0",
 		"eslint-plugin-vue": "^7.7.0",
+		"eslint-webpack-plugin": "^2.4.0",
+		"husky": "^4.3.8",
 		"workbox-webpack-plugin": "^5.1.4"
 	},
 	"browserslist": [
@@ -43,5 +43,10 @@
 		"node": ">= 10.18.1",
 		"npm": ">= 6.13.4",
 		"yarn": ">= 1.21.1"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "npm run precommit-msg && npm run lint && npm run test"
+		}
 	}
 }

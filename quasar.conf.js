@@ -3,20 +3,17 @@
  * the ES6 features that are supported by your Node version. https://node.green/
  */
 
+const path = require('path');
+
 // Configuration for your app
 // https://v1.quasar.dev/quasar-cli/quasar-conf-js
 /* eslint-env node */
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { configure } = require('quasar/wrappers');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
-module.exports = configure(function(/* ctx */) {
+module.exports = function(/* ctx */) {
 	return {
 		// https://v1.quasar.dev/quasar-cli/supporting-ts
-		supportTS: {
-			tsCheckerConfig: {
-				eslint: true
-			}
-		},
+		supportTS: false,
 
 		// https://v1.quasar.dev/quasar-cli/prefetch-feature
 		// preFetch: true,
@@ -24,7 +21,7 @@ module.exports = configure(function(/* ctx */) {
 		// app boot file (/src/boot)
 		// --> boot files are part of "main.js"
 		// https://v1.quasar.dev/quasar-cli/boot-files
-		boot: ['composition-api', 'axios'],
+		boot: ['store'],
 
 		// https://v1.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
 		css: ['app.scss'],
@@ -64,9 +61,25 @@ module.exports = configure(function(/* ctx */) {
 			// extractCSS: false,
 
 			// https://v1.quasar.dev/quasar-cli/handling-webpack
+			extendWebpack(cfg) {
+				// Add our own alias in addition to the Quasar defaults
+				cfg.resolve.alias = {
+					...cfg.resolve.alias,
+					store: path.resolve(__dirname, './src/store'),
+					utilities: path.resolve(__dirname, './src/utilities')
+				};
+			},
+
 			// "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
-			chainWebpack(/* chain */) {
-				//
+			chainWebpack(chain) {
+				chain
+					.plugin('eslint-webpack-plugin')
+					.use(ESLintPlugin, [{ extensions: ['js', 'vue'] }]);
+
+				// Remove the plugin that automatically marks all async components with the prefetch tag
+				chain.plugins.delete('prefetch');
+				chain.module.rule('vue').uses.delete('cache-loader');
+				chain.module.rule('js').uses.delete('cache-loader');
 			}
 		},
 
@@ -74,8 +87,23 @@ module.exports = configure(function(/* ctx */) {
 		devServer: {
 			https: true,
 			host: 'www.localtest.me',
-			port: 3000,
-			open: true // opens browser window automatically
+			port: 8080,
+			historyApiFallback: true,
+			open: true, // opens browser window automatically
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods':
+					'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+				'Access-Control-Allow-Headers':
+					'X-Requested-With, content-type, Authorization'
+			},
+			before: (app) => {
+				app.set('etag', 'strong');
+				app.use((req, res, next) => {
+					res.set('Cache-Control', 'no-cache');
+					next();
+				});
+			}
 		},
 
 		// https://v1.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
@@ -114,14 +142,13 @@ module.exports = configure(function(/* ctx */) {
 			workboxPluginMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
 			workboxOptions: {}, // only for GenerateSW
 			manifest: {
-				name: 'Search My Gitlab',
-				short_name: 'Search My Gitlab',
-				description:
-					'An interface for searching all of your Gitlab repositories at once, since this is a feature not available in standard Gitlab.',
+				name: `Search My Gitlab`,
+				short_name: `Search My Gitlab`,
+				description: `An interface for searching all of your Gitlab repositories at once, since this is a feature not available in standard Gitlab.`,
 				display: 'standalone',
 				orientation: 'portrait',
 				background_color: '#ffffff',
-				theme_color: '#027be3',
+				theme_color: '#548',
 				icons: [
 					{
 						src: 'icons/icon-128x128.png',
@@ -192,4 +219,4 @@ module.exports = configure(function(/* ctx */) {
 			}
 		}
 	};
-});
+};
