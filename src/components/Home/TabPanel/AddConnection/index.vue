@@ -13,19 +13,14 @@
 			</h1>
 
 			<p>
-				Here, you can search all repos in your Gitlab instance
-				simultaneously for free! No more need to mindlessly open and
-				search every repo one at a time, nor spend a ton of money
-				upgrading to a higher Gitlab tier
+				Here, you can search all repos in your Gitlab instance simultaneously for free! No more need to mindlessly open and search every repo
+				one at a time, nor spend a ton of money upgrading to a higher Gitlab tier
 				<i>just</i> so you can use ElasticSearch.
 			</p>
 
 			<p>
-				Just enter your Gitlab URL and an access token and you'll be
-				well on your way to code-search heaven. We don't save this
-				information anywhere but on your browser - don't believe us? Go
-				ahead and check your network tab in the dev tools. Happy
-				searches!
+				Just enter your Gitlab URL and an access token and you'll be well on your way to code-search heaven. We don't save this information
+				anywhere but on your browser - don't believe us? Go ahead and check your network tab in the dev tools. Happy searches!
 			</p>
 		</div>
 
@@ -36,10 +31,7 @@
 					<div class="text-h6">Well, this is awkward.</div>
 				</q-card-section>
 
-				<q-card-section
-					v-html="error"
-					class="q-py-none"
-				></q-card-section>
+				<q-card-section v-html="error" class="q-py-none"></q-card-section>
 
 				<q-card-actions align="right">
 					<q-btn flat label="Retry" color="primary" v-close-popup />
@@ -59,21 +51,13 @@
 				</q-card-section>
 
 				<q-card-actions align="center">
-					<q-btn
-						label="Start Searching"
-						color="primary"
-						@click="migrate"
-					/>
+					<q-btn label="Start Searching" color="primary" @click="migrate" />
 				</q-card-actions>
 			</q-card>
 		</q-dialog>
 
 		<!-- Our actual form for accepting URL and token -->
-		<q-form
-			@submit="onSubmit"
-			:autofocus="!hasNone"
-			class="q-gutter-md q-pt-md text-center"
-		>
+		<q-form @submit="onSubmit" :autofocus="!hasNone" class="q-gutter-md q-pt-md text-center">
 			<!-- Gitlab URL input -->
 			<q-input
 				filled
@@ -82,12 +66,8 @@
 				hint="E.g. https://gitlab.com"
 				lazy-rules
 				:rules="[
-					(val) =>
-						(val && val.length > 0) ||
-						'Please provide a URL string to your Gitlab instance',
-					(val) =>
-						val.includes('http') ||
-						'It must be a fully-qualified URL'
+					(val) => (val && val.length > 0) || 'Please provide a URL string to your Gitlab instance',
+					(val) => val.includes('http') || 'It must be a fully-qualified URL'
 				]"
 			/>
 
@@ -97,19 +77,13 @@
 				v-model="token"
 				label="Your Gitlab Access Token"
 				lazy-rules
-				:rules="[
-					(val) =>
-						(val && val.length > 0) ||
-						'Please provide a personal access token'
-				]"
+				:rules="[(val) => (val && val.length > 0) || 'Please provide a personal access token']"
 			>
 				<!-- We have to use a v-slot if we want HTML in our hint -->
 				<template v-slot:hint>
 					<div>
 						See the
-						<a
-							href="https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#creating-a-personal-access-token"
-							target="_blank"
+						<a href="https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#creating-a-personal-access-token" target="_blank"
 							>Gitlab docs</a
 						>
 						for instructions to create a token with the
@@ -123,12 +97,7 @@
 
 			<!-- Uh, the submit button. Yep. That's it. -->
 			<div>
-				<q-btn
-					label="Submit"
-					type="submit"
-					color="primary"
-					:disable="!canSubmit"
-				/>
+				<q-btn label="Submit" type="submit" color="primary" :disable="!canSubmit" />
 			</div>
 
 			<!-- Our loading icon while we validate credentials -->
@@ -140,7 +109,7 @@
 </template>
 
 <script>
-import SearchMyGitlabLogo from 'components/shared/SearchMyGitlabLogo.vue';
+import SearchMyGitlabLogo from 'src/components/shared/SearchMyGitlabLogo/index';
 
 export default {
 	name: 'AddConnection',
@@ -165,12 +134,7 @@ export default {
 		 * Simple calculates whether the form has been filled out properly
 		 */
 		canSubmit() {
-			return (
-				this.accept &&
-				this.domain &&
-				this.domain.includes('http') &&
-				this.token
-			);
+			return this.accept && this.domain && this.domain.includes('http') && this.token;
 		}
 	},
 	methods: {
@@ -181,10 +145,7 @@ export default {
 			this.loading = true;
 
 			// Pass them onto our store
-			const response = await this.$store.Connection.createConn(
-				this.domain,
-				this.token
-			);
+			const response = await this.$store.Connection.createConn(this.domain, this.token);
 
 			if (response.error) {
 				switch (response.error) {

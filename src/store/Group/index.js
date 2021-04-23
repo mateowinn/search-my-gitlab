@@ -22,10 +22,7 @@ const Group = new Vue({
 		 */
 		groups() {
 			return (conn) => {
-				if (
-					this.allGroups[conn.index] === undefined &&
-					!this.fetched[conn.index]
-				) {
+				if (this.allGroups[conn.index] === undefined && !this.fetched[conn.index]) {
 					// Mark this as being fetched
 					this.$set(this.fetched, conn.index, true);
 
@@ -37,14 +34,23 @@ const Group = new Vue({
 						url: `${conn.domain}/api/v4/groups?per_page=100`
 					})
 						.then((response) => {
-							// Update this connection's groups in our running list
-							this.$set(
-								this.allGroups,
-								conn.index,
-								response.data
-							);
+							// Update this connection's groups in our running list, but filter them first
+							const filtered = [];
+							for (const group of response.data) {
+								filtered.push({
+									id: group.id,
+									webUrl: group.web_url,
+									name: group.name,
+									avatarUrl: group.avatar_url
+								});
+							}
+
+							this.$set(this.allGroups, conn.index, filtered);
 						})
 						.catch((e) => {
+							// Mark it as null as a sign that we failed to fetch them
+							this.$set(this.allGroups, conn.index, null);
+
 							console.error(
 								{
 									error: e,

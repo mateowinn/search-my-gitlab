@@ -28,20 +28,8 @@
 
 			<!-- The actual content under each tab -->
 			<q-tab-panels v-model="tabIndex" style="overflow: hidden;">
-				<q-tab-panel
-					v-for="conn of connections"
-					:key="'panel' + conn.index"
-					:name="conn.index"
-					class="flex flex-center"
-					style="overflow: hidden;"
-				>
-					<TabPanel
-						:conn="conn"
-						:projects="
-							conn.index === tabIndex ? filteredProjects : {}
-						"
-						:toggle-drawer="toggleDrawer"
-					/>
+				<q-tab-panel v-for="conn of connections" :key="'panel' + conn.index" :name="conn.index" class="flex flex-center tab-panel">
+					<TabPanel :conn="conn" :projects="conn.index === tabIndex ? filteredProjects : {}" :toggle-drawer="toggleDrawer" />
 				</q-tab-panel>
 			</q-tab-panels>
 		</q-card>
@@ -125,13 +113,34 @@ export default {
 
 			// If we have our groups, go ahead and grab all of the projects accessible to us through those groups
 			for (const group of this.currentGroups) {
-				projects[group.id] = this.$store.Project.projects(
-					this.currentConn,
-					group
-				);
+				projects[group.id] = this.$store.Project.projects(this.currentConn, group);
 			}
 
 			return projects;
+		},
+
+		nonNullProjects() {
+			const nonNulls = {};
+
+			for (const groupId of Object.keys(this.currentProjects)) {
+				if (this.currentProjects[groupId] !== null) {
+					nonNulls[groupId] = this.currentProjects[groupId];
+				}
+			}
+
+			return nonNulls;
+		},
+
+		nullProjects() {
+			const nonNulls = {};
+
+			for (const groupId of Object.keys(this.currentProjects)) {
+				if (this.currentProjects[groupId] === null) {
+					nonNulls[groupId] = this.currentProjects[groupId];
+				}
+			}
+
+			return nonNulls;
 		},
 
 		filters() {
@@ -140,16 +149,12 @@ export default {
 			// All of our filters are synced to the URL through query parameters
 			if (this.$route.query.groups) {
 				// Group IDs
-				filters.groups = this.$route.query.groups
-					.split(',')
-					.map((groupId) => +groupId); // Just to turn the string numbers into actual Ints
+				filters.groups = this.$route.query.groups.split(',').map((groupId) => +groupId); // Just to turn the string numbers into actual Ints
 			}
 
 			if (this.$route.query.projects) {
 				// Community IDs
-				filters.projects = this.$route.query.projects
-					.split(',')
-					.map((projectId) => +projectId); // Just to turn the string numbers into actual Ints
+				filters.projects = this.$route.query.projects.split(',').map((projectId) => +projectId); // Just to turn the string numbers into actual Ints
 			}
 
 			// Always try to keep the search query parameters
@@ -170,37 +175,26 @@ export default {
 		filteredProjects() {
 			// We don't want to keep computing all of this until we've actually tried fetching all groups
 			if (
-				this.currentGroups.length !==
-					Object.keys(this.currentProjects).length ||
-				Object.values(this.currentProjects).some((arr) => {
+				this.currentGroups.length !== Object.keys(this.currentProjects).length ||
+				Object.values(this.nonNullProjects).some((arr) => {
 					return arr === undefined;
 				})
 			) {
-				console.log('Returning empty filtered projects');
 				return {};
 			}
 
 			if (this.noFilters) {
-				return this.currentProjects;
+				return this.nonNullProjects;
 			} else {
 				const filteredProjects = {};
 
-				console.log('projects in filtered', this.currentProjects);
-
 				// Go through every project in every group to determine whether it should be included in the searches
-				Object.keys(this.currentProjects).forEach((groupId) => {
+				Object.keys(this.nonNullProjects).forEach((groupId) => {
 					// Skip the wait if this whole group has been requested
-					if (
-						this.filters.groups &&
-						this.filters.groups.includes(+groupId)
-					) {
-						filteredProjects[groupId] = [
-							...this.currentProjects[groupId]
-						];
+					if (this.filters.groups && this.filters.groups.includes(+groupId)) {
+						filteredProjects[groupId] = [...this.nonNullProjects[groupId]];
 					} else if (this.filters.projects) {
-						const eligibleProjects = this.currentProjects[
-							groupId
-						].filter((project) => {
+						const eligibleProjects = this.nonNullProjects[groupId].filter((project) => {
 							// Include this if it has been named specifically in the filters
 							if (this.filters.projects.includes(project.id)) {
 								return true;
@@ -210,7 +204,6 @@ export default {
 							return false;
 						});
 
-						console.log('eligible projects', eligibleProjects);
 						// If any projects in this group should be searched, then throw it in along with the group reference
 						if (eligibleProjects.length > 0) {
 							filteredProjects[groupId] = eligibleProjects;
@@ -227,56 +220,52 @@ export default {
 
 			// We don't want to keep computing all of this until we've actually tried fetching all groups
 			if (
-				this.currentGroups.length !==
-					Object.keys(this.currentProjects).length ||
-				Object.values(this.currentProjects).some((arr) => {
+				this.currentGroups.length !== Object.keys(this.currentProjects).length ||
+				Object.values(this.nonNullProjects).some((arr) => {
 					return arr === undefined;
 				})
 			) {
 				return drawerFilters;
 			}
 
-			console.log('defining filters, current groups', this.currentGroups);
 			// Grab all categories as filter options
 			for (const group of this.currentGroups) {
 				const entry = {
 					id: group.id,
 					type: 'groups',
+					avatarUrl: group.avatarUrl,
 					label: group.name
 				};
 
-				// Don't forget to include all of this group's projects!
-				const groupProjects = this.currentProjects[group.id];
+				// Don't forget to include all of this group's projects - IF they have them!
+				const groupProjects = this.nonNullProjects[group.id];
+
+				if (!groupProjects || groupProjects.length < 1) {
+					// Uhh...nope. Not gonna deal with you.
+					continue;
+				}
 
 				// Now insert those as children of the group link
-				if (groupProjects && groupProjects.length) {
-					entry.children = groupProjects.map((project) => {
-						return {
-							id: project.id,
-							type: 'projects',
-							label: project.name,
-							checked: !!(
-								this.noFilters || // We want to show (only visually) everything as checked if the user has not specified any search filters
-								(this.filters.projects &&
-									this.filters.projects.indexOf(project.id) >
-										-1)
-							)
-						};
-					});
-				}
+				entry.children = groupProjects.map((project) => {
+					return {
+						id: project.id,
+						type: 'projects',
+						label: project.name,
+						avatarUrl: project.avatarUrl,
+						checked: !!(
+							this.noFilters || // We want to show (only visually) everything as checked if the user has not specified any search filters
+							(this.filters.projects && this.filters.projects.indexOf(project.id) > -1)
+						)
+					};
+				});
 
 				// Compute how we want to show the group checkbox - checked, unchecked, or partially (because a group child is checked)
 				if (
 					this.noFilters || // We want to show (only visually) everything as checked if the user has not specified any search filters
-					(this.filters.groups &&
-						this.filters.groups.indexOf(group.id) > -1)
+					(this.filters.groups && this.filters.groups.indexOf(group.id) > -1)
 				) {
 					entry.checked = true;
-				} else if (
-					entry.children &&
-					entry.children.length &&
-					entry.children.find((project) => project.checked === true)
-				) {
+				} else if (entry.children && entry.children.length && entry.children.find((project) => project.checked === true)) {
 					entry.checked = null;
 				} else {
 					entry.checked = false;
@@ -384,10 +373,7 @@ export default {
 		const queryDomain = this.$route.query.domain;
 		const isNum = +queryDomain === +queryDomain;
 
-		if (
-			(!isNum && queryDomain !== 'add') ||
-			(isNum && this.connections.length < 2)
-		) {
+		if ((!isNum && queryDomain !== 'add') || (isNum && this.connections.length < 2)) {
 			// Looks like we don't, so, let's set one!
 			const newRoute = {
 				...this.$route,
@@ -407,3 +393,14 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.tab-panel {
+	overflow: hidden;
+	padding: 16px 0;
+
+	@media (min-width: $breakpoint-sm-min) {
+		padding: 16px;
+	}
+}
+</style>

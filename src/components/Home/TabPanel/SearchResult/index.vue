@@ -1,9 +1,6 @@
 <template>
-	<q-card>
-		<q-card-section
-			class="q-pa-sm"
-			style="overflow: auto; white-space: nowrap;"
-		>
+	<q-card class="q-ma-sm" bordered>
+		<q-card-section class="q-pa-sm" style="overflow: auto; white-space: nowrap;">
 			<div class="text-subtitle1 text-weight-bold">
 				<q-icon name="description" size="xs" />
 				{{ result.path }}
@@ -14,16 +11,10 @@
 			<q-card-section class="q-pa-none">
 				<p
 					v-for="(piece, index) of getPieces(result.data)"
-					:key="
-						`result-${result.project_id}-${resultIndex}-line-${index}`
-					"
-					class="q-mb-none q-pa-xs q-px-sm"
+					:key="`result-${result.project_id}-${resultIndex}-line-${index}`"
+					class="q-mb-none q-pa-xs q-px-sm code-line"
 					:class="{
-						'bg-grey-8':
-							piece &&
-							piece
-								.toLowerCase()
-								.includes(searchQuery.toLowerCase())
+						'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
 					}"
 				>
 					{{ result.startline + index }}
@@ -32,22 +23,13 @@
 
 			<q-separator vertical dark />
 
-			<q-card-section
-				class="q-pa-none"
-				style="overflow-x:auto;white-space: nowrap;"
-			>
+			<q-card-section class="q-pa-none" style="overflow-x:auto;white-space: nowrap;">
 				<p
 					v-for="(piece, index) of getPieces(result.data)"
-					:key="
-						`result-${result.project_id}-${resultIndex}-text-${index}`
-					"
-					class="q-mb-none q-pa-xs q-px-sm"
+					:key="`result-${result.project_id}-${resultIndex}-text-${index}`"
+					class="q-mb-none q-pa-xs q-px-sm code-line"
 					:class="{
-						'bg-grey-8':
-							piece &&
-							piece
-								.toLowerCase()
-								.includes(searchQuery.toLowerCase())
+						'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
 					}"
 				>
 					{{ piece || '&nbsp;' }}
@@ -93,3 +75,9 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.code-line {
+	width: 100%;
+}
+</style>

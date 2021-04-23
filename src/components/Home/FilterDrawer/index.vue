@@ -21,14 +21,7 @@
 					<q-space />
 
 					<!-- X icon for closing the slide-out -->
-					<q-btn
-						@click.prevent.stop="toggleDrawer"
-						class="icon-close"
-						icon="close"
-						flat
-						round
-						dense
-					/>
+					<q-btn @click.prevent.stop="toggleDrawer" class="icon-close" icon="close" flat round dense />
 				</q-card-section>
 			</q-card>
 
@@ -36,21 +29,22 @@
 				<!-- If the group link has children, we want an expansion item instead of a regular one -->
 				<q-expansion-item
 					v-if="group.children"
+					tag="label"
 					expand-separator
 					:content-inset-level="0.5"
 					expand-icon-class="text-menu-side-link"
 				>
 					<template v-slot:header>
+						<q-item-section side>
+							<q-checkbox toggle-indeterminate v-model="group.checked" v-on:click.native="toggleFilter(group.type, group.id)" dark />
+						</q-item-section>
+
+						<q-item-section avatar>
+							<Avatar :entity="{ avatarUrl: group.avatarUrl, name: group.label }" />
+						</q-item-section>
+
 						<q-item-section>
-							<q-checkbox
-								toggle-indeterminate
-								v-model="group.checked"
-								:label="group.label"
-								v-on:click.native="
-									toggleFilter(group.type, group.id)
-								"
-								dark
-							/>
+							{{ group.label }}
 						</q-item-section>
 					</template>
 					<!-- Loop through the children (projects) and show them all -->
@@ -60,34 +54,25 @@
 						active-class="text-menu-side-link-active bg-menu-side-link-active-background"
 					>
 						<!-- The label and checkbox -->
+						<q-item-section side>
+							<q-checkbox v-model="project.checked" v-on:click.native="toggleFilter(project.type, project.id)" dark />
+						</q-item-section>
+
+						<q-item-section avatar>
+							<Avatar :entity="{ avatarUrl: project.avatarUrl, name: project.label }" />
+						</q-item-section>
+
 						<q-item-section>
-							<q-checkbox
-								v-model="project.checked"
-								:label="project.label"
-								v-on:click.native="
-									toggleFilter(project.type, project.id)
-								"
-								dark
-							/>
+							{{ project.label }}
 						</q-item-section>
 					</q-item>
 				</q-expansion-item>
 
 				<!-- If no children, just show a top-level clickable link -->
-				<q-item
-					v-else
-					active-class="text-menu-side-link-active bg-menu-side-link-active-background"
-				>
+				<q-item v-else active-class="text-menu-side-link-active bg-menu-side-link-active-background">
 					<!-- The label and checkbox -->
 					<q-item-section>
-						<q-checkbox
-							v-model="group.checked"
-							:label="group.label"
-							v-on:click.native="
-								toggleFilter(group.type, group.id)
-							"
-							dark
-						/>
+						<q-checkbox v-model="group.checked" :label="group.label" v-on:click.native="toggleFilter(group.type, group.id)" dark />
 					</q-item-section>
 				</q-item>
 			</q-list>
@@ -96,6 +81,8 @@
 </template>
 
 <script>
+import Avatar from 'components/shared/Avatar/index';
+
 export default {
 	props: {
 		drawerOpen: {
@@ -130,15 +117,14 @@ export default {
 			e.preventDefault();
 			e.stopPropagation();
 
-			if (
-				e.target &&
-				e.target.className &&
-				e.target.className.indexOf('q-drawer__backdrop') > -1
-			) {
+			if (e.target && e.target.className && e.target.className.indexOf('q-drawer__backdrop') > -1) {
 				// If they clicked on the backdrop, please just close it. Don't force the person to click the "close" button.
 				this.toggleDrawer();
 			}
 		}
+	},
+	components: {
+		Avatar
 	}
 };
 </script>

@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import SearchMyGitlabLogo from 'components/shared/SearchMyGitlabLogo.vue';
+import SearchMyGitlabLogo from 'src/components/shared/SearchMyGitlabLogo/index';
 
 export default {
 	name: 'MainLayout',

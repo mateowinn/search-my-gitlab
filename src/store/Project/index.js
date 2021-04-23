@@ -29,10 +29,7 @@ const Project = new Vue({
 					this.$set(this.fetched, conn.index, {});
 				}
 
-				if (
-					this.allProjects[conn.index][group.id] === undefined &&
-					!this.fetched[conn.index][group.id]
-				) {
+				if (this.allProjects[conn.index][group.id] === undefined && !this.fetched[conn.index][group.id]) {
 					// Mark this as fetch initiated
 					this.$set(this.fetched[conn.index], group.id, true);
 
@@ -44,14 +41,26 @@ const Project = new Vue({
 						url: `${conn.domain}/api/v4/groups/${group.id}/projects?per_page=100`
 					})
 						.then((response) => {
-							// Update this group's projects in our running list
-							this.$set(
-								this.allProjects[conn.index],
-								group.id,
-								response.data
-							);
+							// Update this group's projects in our running list, but filter them first
+							const filtered = [];
+							for (const project of response.data) {
+								filtered.push({
+									id: project.id,
+									name: project.name,
+									defaultBranch: project.default_branch,
+									webUrl: project.web_url,
+									avatarUrl: project.avatar_url,
+									archived: project.archived,
+									groupId: project.namespace.id
+								});
+							}
+
+							this.$set(this.allProjects[conn.index], group.id, filtered);
 						})
 						.catch((e) => {
+							// Mark this as null in our list as a sign that there was an error
+							this.$set(this.allProjects[conn.index], group.id, null);
+
 							console.error(
 								{
 									error: e,
