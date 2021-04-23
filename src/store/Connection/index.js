@@ -47,10 +47,7 @@ const Connection = new Vue({
 			}
 
 			// Whether new or updated, refresh our local storage copy!
-			window.localStorage.setItem(
-				STORED_CONNECTIONS,
-				JSON.stringify(this.allConnections)
-			);
+			window.localStorage.setItem(STORED_CONNECTIONS, JSON.stringify(this.allConnections));
 
 			return connection;
 		},
@@ -70,10 +67,7 @@ const Connection = new Vue({
 			}
 
 			// Don't forget to update our local storage! Imagine if they reloaded the page and saw their "deleted" connection. Awkward...
-			window.localStorage.setItem(
-				STORED_CONNECTIONS,
-				JSON.stringify(this.allConnections)
-			);
+			window.localStorage.setItem(STORED_CONNECTIONS, JSON.stringify(this.allConnections));
 
 			// "Returning" undefined will notify the requester that we couldn't find it
 		},

@@ -61,11 +61,7 @@ module.exports = {
 		'no-unused-vars': 1,
 		'no-warning-comments': 1,
 		'no-var': 2,
-		quotes: [
-			'error',
-			'single',
-			{ allowTemplateLiterals: true, avoidEscape: true }
-		],
+		quotes: ['error', 'single', { allowTemplateLiterals: true, avoidEscape: true }],
 		'no-useless-escape': [0],
 		'no-case-declarations': [0],
 		semi: [2, 'always'],

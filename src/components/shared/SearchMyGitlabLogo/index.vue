@@ -1,9 +1,5 @@
 <template>
-	<svg
-		xmlns="http://www.w3.org/2000/svg"
-		xmlns:xlink="http://www.w3.org/1999/xlink"
-		viewBox="0 0 500 500"
-	>
+	<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 500 500">
 		<!-- Search icon -->
 		<svg
 			class="gitlab-search-icon"
@@ -25,14 +21,7 @@
 			xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"
 		>
 			<defs></defs>
-			<g
-				id="Page-1"
-				stroke="none"
-				stroke-width="1"
-				fill="none"
-				fill-rule="evenodd"
-				sketch:type="MSPage"
-			>
+			<g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
 				<g id="Fill-1-+-Group-24" sketch:type="MSLayerGroup">
 					<g id="Group-24" sketch:type="MSShapeGroup">
 						<g id="Group">
@@ -42,11 +31,7 @@
 								fill="#E24329"
 							></path>
 							<path id="Fill-6" fill="#FC6D26"></path>
-							<path
-								d="M105.0614,193.6548 L66.4214,74.7338 L12.2684,74.7338 L105.0614,193.6548 Z"
-								id="Fill-8"
-								fill="#FC6D26"
-							></path>
+							<path d="M105.0614,193.6548 L66.4214,74.7338 L12.2684,74.7338 L105.0614,193.6548 Z" id="Fill-8" fill="#FC6D26"></path>
 							<path id="Fill-10" fill="#FC6D26"></path>
 							<path
 								d="M12.2685,74.7341 L12.2685,74.7341 L0.5265,110.8731 C-0.5445,114.1691 0.6285,117.7801 3.4325,119.8171 L105.0615,193.6551 L12.2685,74.7341 Z"
@@ -59,11 +44,7 @@
 								id="Fill-16"
 								fill="#E24329"
 							></path>
-							<path
-								d="M105.0614,193.6548 L143.7014,74.7338 L197.8544,74.7338 L105.0614,193.6548 Z"
-								id="Fill-18"
-								fill="#FC6D26"
-							></path>
+							<path d="M105.0614,193.6548 L143.7014,74.7338 L197.8544,74.7338 L105.0614,193.6548 Z" id="Fill-18" fill="#FC6D26"></path>
 							<path
 								d="M197.8544,74.7341 L197.8544,74.7341 L209.5964,110.8731 C210.6674,114.1691 209.4944,117.7801 206.6904,119.8171 L105.0614,193.6551 L197.8544,74.7341 Z"
 								id="Fill-20"

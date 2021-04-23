@@ -72,9 +72,7 @@ module.exports = function(/* ctx */) {
 
 			// "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
 			chainWebpack(chain) {
-				chain
-					.plugin('eslint-webpack-plugin')
-					.use(ESLintPlugin, [{ extensions: ['js', 'vue'] }]);
+				chain.plugin('eslint-webpack-plugin').use(ESLintPlugin, [{ extensions: ['js', 'vue'] }]);
 
 				// Remove the plugin that automatically marks all async components with the prefetch tag
 				chain.plugins.delete('prefetch');
@@ -92,10 +90,8 @@ module.exports = function(/* ctx */) {
 			open: true, // opens browser window automatically
 			headers: {
 				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods':
-					'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-				'Access-Control-Allow-Headers':
-					'X-Requested-With, content-type, Authorization'
+				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+				'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
 			},
 			before: (app) => {
 				app.set('etag', 'strong');

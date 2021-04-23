@@ -197,8 +197,6 @@ const allMediaAssets = {
 
 export default {
 	allUsers: allMediaAssets,
-	assets: jest
-		.fn((page) => allMediaAssets[page])
-		.mockName('store.MediaAsset.assets.mock'),
+	assets: jest.fn((page) => allMediaAssets[page]).mockName('store.MediaAsset.assets.mock'),
 	clearAll: jest.fn().mockName('store.MediaAsset.clearAll.mock')
 };

@@ -134,8 +134,6 @@ const allGroups = {
 };
 
 export default {
-	groups: jest
-		.fn((conn) => allGroups[conn.index])
-		.mockName('store.Group.groups.mock'),
+	groups: jest.fn((conn) => allGroups[conn.index]).mockName('store.Group.groups.mock'),
 	clearAll: jest.fn().mockName('store.Group.clearAll.mock')
 };
