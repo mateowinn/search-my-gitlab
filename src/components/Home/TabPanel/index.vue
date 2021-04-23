@@ -135,7 +135,7 @@ export default {
 			};
 			routeQuery.search = query;
 
-			this.$router.push({ path: '/', query: routeQuery });
+			this.$router.replace({ path: '/', query: routeQuery });
 		},
 
 		/**
