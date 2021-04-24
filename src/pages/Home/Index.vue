@@ -3,7 +3,8 @@
 		<q-card square style="min-height: inherit;">
 			<!-- Tab dividers -->
 			<q-tabs
-				v-model="tabIndex"
+				:value="tabIndex"
+				@input="navigateToDomain"
 				dense
 				no-caps
 				inline-label
@@ -348,6 +349,9 @@ export default {
 					domain: this.$route.query.domain // Clear everything BUT the current domain index
 				}
 			});
+		},
+		navigateToDomain(domain) {
+			this.$router.replace({ path: '/', query: { domain } });
 		}
 	},
 	watch: {
@@ -375,20 +379,13 @@ export default {
 
 		if ((!isNum && queryDomain !== 'add') || (isNum && this.connections.length < 2)) {
 			// Looks like we don't, so, let's set one!
-			const newRoute = {
-				...this.$route,
-				query: {}
-			};
-
 			if (this.connections.length > 1) {
 				// The user already has connection info setup but didn't specify which one to look at yet
-				newRoute.query.domain = 0;
+				this.navigateToDomain(0);
 			} else {
 				// New user - just take them straight to adding a connection
-				newRoute.query.domain = 'add';
+				this.navigateToDomain('add');
 			}
-
-			this.$router.replace(newRoute);
 		}
 	}
 };

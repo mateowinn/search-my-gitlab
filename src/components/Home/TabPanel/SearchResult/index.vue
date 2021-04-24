@@ -1,41 +1,63 @@
 <template>
 	<q-card class="q-ma-sm" bordered>
-		<q-card-section class="q-pa-sm" style="overflow: auto; white-space: nowrap;">
+		<q-card-actions class="q-pa-sm cursor-pointer" style="overflow: auto; white-space: nowrap;" @click.prevent="expanded = !expanded">
 			<div class="text-subtitle1 text-weight-bold">
-				<q-icon name="description" size="xs" />
+				<q-icon name="description" size="xs" style="vertical-align: text-top;" />
 				{{ result.path }}
+				<q-btn
+					type="a"
+					icon="open_in_new"
+					color="grey-8"
+					size="sm"
+					flat
+					style="vertical-align: middle;"
+					:href="result.url"
+					target="_blank"
+					@click="(e) => e.stopPropagation()"
+				/>
 			</div>
-		</q-card-section>
 
-		<q-card-section horizontal class="q-pa-xs bg-black text-white">
-			<q-card-section class="q-pa-none">
-				<p
-					v-for="(piece, index) of getPieces(result.data)"
-					:key="`result-${result.project_id}-${resultIndex}-line-${index}`"
-					class="q-mb-none q-pa-xs q-px-sm code-line"
-					:class="{
-						'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
-					}"
-				>
-					{{ result.startline + index }}
-				</p>
-			</q-card-section>
+			<q-space />
 
-			<q-separator vertical dark />
+			<q-icon color="grey-7" size="sm" :name="expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'" />
+		</q-card-actions>
 
-			<q-card-section class="q-pa-none" style="overflow-x:auto;white-space: nowrap;">
-				<p
-					v-for="(piece, index) of getPieces(result.data)"
-					:key="`result-${result.project_id}-${resultIndex}-text-${index}`"
-					class="q-mb-none q-pa-xs q-px-sm code-line"
-					:class="{
-						'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
-					}"
-				>
-					{{ piece || '&nbsp;' }}
-				</p>
-			</q-card-section>
-		</q-card-section>
+		<q-slide-transition>
+			<div v-show="expanded">
+				<q-card-section horizontal class="q-pa-xs bg-black text-white">
+					<q-card-section class="q-pa-none">
+						<a
+							v-for="(piece, index) of getPieces(result.data)"
+							:key="`result-${result.project_id}-${resultIndex}-line-${index}`"
+							:href="`${result.url}#L${result.startline + index}`"
+							target="_blank"
+							class="code-line code-line__number"
+						>
+							<p class="q-mb-none q-pa-xs q-px-sm">
+								<q-icon name="link" size="xs" class="q-pr-xs" />
+
+								<span>{{ result.startline + index }}</span>
+							</p>
+						</a>
+					</q-card-section>
+
+					<q-separator vertical dark />
+
+					<q-card-section class="q-pa-none code-line-container" style="overflow-x:auto;white-space: nowrap;">
+						<p
+							v-for="(piece, index) of getPieces(result.data)"
+							:key="`result-${result.project_id}-${resultIndex}-text-${index}`"
+							class="q-mb-none q-pa-xs q-px-sm code-line"
+							:class="{
+								'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
+							}"
+						>
+							{{ piece || '&nbsp;' }}
+						</p>
+					</q-card-section>
+				</q-card-section>
+			</div>
+		</q-slide-transition>
 	</q-card>
 </template>
 
@@ -54,7 +76,16 @@ export default {
 		searchQuery: {
 			type: String,
 			default: ''
+		},
+		expandAll: {
+			type: Boolean,
+			default: true
 		}
+	},
+	data() {
+		return {
+			expanded: true
+		};
 	},
 	methods: {
 		/**
@@ -72,12 +103,50 @@ export default {
 
 			return pieces;
 		}
+	},
+	watch: {
+		expandAll: {
+			handler(newVal) {
+				this.expanded = newVal;
+			}
+		}
 	}
 };
 </script>
 
 <style lang="scss">
-.code-line {
+.code-line,
+.code-line-container {
 	width: 100%;
+}
+
+.code-line {
+	&__number {
+		color: white !important;
+		text-decoration: none;
+
+		& > p {
+			width: 100%;
+			display: flex;
+
+			& > i {
+				visibility: hidden;
+			}
+		}
+
+		// Only show the link icon when it's hovered over
+		&:hover {
+			& > p {
+				& > span {
+					text-decoration: underline;
+				}
+
+				& > i {
+					visibility: visible;
+					text-decoration: none;
+				}
+			}
+		}
+	}
 }
 </style>
