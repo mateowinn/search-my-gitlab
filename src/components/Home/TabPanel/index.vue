@@ -42,8 +42,18 @@
 								<Avatar :entity="getProjectByIds(groupId, projectId)" />
 							</q-item-section>
 
-							<q-item-section>
-								{{ getProjectByIds(groupId, projectId).name }}
+							<q-item-section class="expansion-inset__name">
+								<span>{{ getProjectByIds(groupId, projectId).name }}</span>
+
+								<q-btn
+									type="a"
+									icon="open_in_new"
+									color="grey-8"
+									size="sm"
+									flat
+									:href="getProjectByIds(groupId, projectId).webUrl"
+									target="_blank"
+								/>
 							</q-item-section>
 						</template>
 
@@ -55,6 +65,7 @@
 								:result="searchResult"
 								:result-index="index"
 								:search-query="searchQuery"
+								:expand-all="expandAll"
 							/>
 						</q-list>
 					</q-expansion-item>
@@ -181,6 +192,11 @@ export default {
 											aggregatedResults[group.id] = aggregatedResults[group.id] || {};
 											aggregatedResults[group.id][project.id] = response.data;
 
+											// Append a dynamic link to this in order to be able to just open it in a new tab
+											for (const result of aggregatedResults[group.id][project.id]) {
+												result.url = `${project.webUrl}/-/blob/${result.ref}/${result.path}`;
+											}
+
 											// Also add to our metadata, please
 											this.projectsWithResults += 1;
 											this.resultsCount += response.data.length;
@@ -260,6 +276,9 @@ export default {
 						expansionItem.hide();
 					}
 
+					// console.log('Finding children', expansionItem.getElementsByClassName('q-expansion-item'));
+					console.log('Child', expansionItem);
+
 					// Also search through all of the projects inside of each group and expand/collapse them
 					for (const childItem of expansionItem.$children[1].$children[0].$children) {
 						if (newVal) {
@@ -309,5 +328,11 @@ export default {
 
 .expansion-inset {
 	padding-left: 8px;
+
+	&__name {
+		flex-direction: row;
+		justify-content: flex-start;
+		align-content: center;
+	}
 }
 </style>
