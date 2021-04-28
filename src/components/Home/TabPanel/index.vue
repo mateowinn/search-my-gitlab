@@ -34,6 +34,22 @@
 			</q-card>
 		</q-dialog>
 
+		<!-- Here we show the user if we failed to fetch results from any of the projects -->
+		<q-card v-if="!loading && errorsToShow && errorsToShow.length > 0" class="bg-warning">
+			<q-card-section class="q-pb-none">Shoot. We had a couple of projects that we couldn't seem to wrangle anything out of:</q-card-section>
+
+			<q-card-section class="q-py-xs">
+				<template v-for="(error, index) of errorsToShow">
+					<a :href="error.url" target="_blank" :key="`search-error-${error.id}`">{{ error.name }}</a
+					>{{ errorsToShow.length - 1 > index ? ', ' : '' }}
+				</template>
+			</q-card-section>
+
+			<q-card-section class="q-pt-none"
+				>Refreshing might do the trick. Otherwise, it's probably a permissions or project visibility project.</q-card-section
+			>
+		</q-card>
+
 		<!-- Search metadata, i.e. how many results we found -->
 		<div v-if="results && Object.keys(results).length > 0" class="search-stats">
 			<span class="text-grey-6"
@@ -234,7 +250,7 @@ export default {
 				}
 			}
 
-			// Update some metadata for helping the user
+			// Update some metadata to help the user
 			this.$set(this, 'resultsCount', resultsCount);
 			this.$set(this, 'projectsWithResults', projectsWithResults);
 			this.$set(this, 'someHaveMore', someHaveMore);
@@ -245,6 +261,25 @@ export default {
 			}
 
 			return toShow;
+		},
+
+		errorsToShow() {
+			const projectsWithErrors = [];
+
+			for (const group of this.groups) {
+				for (const project of this.projects[group.id]) {
+					// Add each project with results that hasn't been filtered out
+					if (this.projectsQueried[project.id] && this.projectsQueried[project.id].error) {
+						projectsWithErrors.push({
+							id: project.id,
+							name: project.name,
+							url: project.webUrl
+						});
+					}
+				}
+			}
+
+			return projectsWithErrors;
 		}
 	},
 	methods: {

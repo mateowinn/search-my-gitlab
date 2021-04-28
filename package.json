@@ -1,6 +1,6 @@
 {
 	"name": "search-my-gitlab",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"description": "An interface for searching all of your Gitlab repositories at once, since this is a feature not available in standard Gitlab.",
 	"productName": "Search My Gitlab",
 	"author": "Matt Winn <mateowinn@gmail.com>",
