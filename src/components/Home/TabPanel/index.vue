@@ -35,8 +35,11 @@
 		</q-dialog>
 
 		<!-- Here we show the user if we failed to fetch results from any of the projects -->
-		<q-card v-if="!loading && errorsToShow && errorsToShow.length > 0" class="bg-warning">
-			<q-card-section class="q-pb-none">Shoot. We had a couple of projects that we couldn't seem to wrangle anything out of:</q-card-section>
+		<q-card v-if="!loading && errorsToShow && errorsToShow.length > 0" class="bg-warning" style="width: fit-content;">
+			<q-card-section class="q-pb-none"
+				>Shoot. We had a {{ errorsToShow.length > 1 ? 'couple of projects' : 'project' }} that we couldn't seem to wrangle anything out
+				of:</q-card-section
+			>
 
 			<q-card-section class="q-py-xs">
 				<template v-for="(error, index) of errorsToShow">
@@ -121,6 +124,34 @@
 							/>
 						</q-list>
 
+						<!-- Show them a load more button if we think there might be more -->
+						<q-btn
+							v-if="projectsQueried[projectId].hasMore && !projectsQueried[projectId].loading && !projectsQueried[projectId].error"
+							@click.prevent="loadMore(groupId, projectId)"
+							color="primary"
+							class="q-my-lg q-mx-auto"
+							style="display: block; min-width: 200px;"
+							>Load More</q-btn
+						>
+
+						<!-- Our loading animation while we fetch more -->
+						<q-circular-progress
+							v-if="projectsQueried[projectId].loading"
+							indeterminate
+							size="50px"
+							color="secondary"
+							class="q-my-lg q-mx-auto"
+							style="display: block;"
+						/>
+
+						<div v-if="projectsQueried[projectId].done" class="text-center q-pa-lg">
+							<q-icon name="sd_card_alert" color="warning" size="sm" class="vertical-top" />
+							<span v-if="projectsQueried[projectId].error" class="text-subtitle1"
+								>Dang it! Your account seems to think I'm bugging it too much. Maybe...refresh?</span
+							>
+							<span v-else class="text-subtitle1">Uhh, never mind...looks like that was actually the last of it. Carry on!</span>
+						</div>
+
 						<q-separator />
 					</q-expansion-item>
 				</q-list>
@@ -157,6 +188,7 @@ export default {
 		return {
 			searchQuery: '',
 			confirmQuery: false,
+			pageSize: 20,
 			results: {},
 			errors: [],
 			loading: false,
@@ -323,9 +355,9 @@ export default {
 									headers: {
 										'Private-Token': this.conn.token
 									},
-									url: `${this.conn.domain}/api/v4/projects/${
-										project.id
-									}/search?scope=blobs&per_page=20&search=${encodeURIComponent(this.searchQuery)}`
+									url: `${this.conn.domain}/api/v4/projects/${project.id}/search?scope=blobs&per_page=${
+										this.pageSize
+									}&search=${encodeURIComponent(this.searchQuery)}`
 								})
 									.then((response) => {
 										if (response.data && response.data.length > 0) {
@@ -341,7 +373,7 @@ export default {
 											// Update some metadata figures
 											this.resultsCount += response.data.length;
 											this.projectsWithResults += 1;
-											if (response.data.length === 20) {
+											if (response.data.length === this.pageSize) {
 												this.$set(this.projectsQueried[project.id], 'hasMore', true);
 											}
 										}
@@ -422,6 +454,49 @@ export default {
 			});
 
 			return diff;
+		},
+
+		async loadMore(groupId, projectId) {
+			// A small animation to show the user we're fetching their additional results
+			this.$set(this.projectsQueried[projectId], 'loading', true);
+
+			// Bump the page we're searching for
+			this.$set(this.projectsQueried[projectId], 'page', this.projectsQueried[projectId].page + 1);
+
+			try {
+				const moreResults = await axios({
+					method: 'get',
+					headers: {
+						'Private-Token': this.conn.token
+					},
+					url: `${this.conn.domain}/api/v4/projects/${projectId}/search?scope=blobs&per_page=${this.pageSize}&page=${
+						this.projectsQueried[projectId].page
+					}&search=${encodeURIComponent(this.searchQuery)}`
+				});
+
+				if (moreResults.data.length < 1) {
+					// Who knows? Maybe it had exactly results perfectly divisible by our page size.
+					this.$set(this.projectsQueried[projectId], 'done', true);
+					this.$set(this.projectsQueried[projectId], 'hasMore', false);
+				} else {
+					// Combine these results with the previous
+					this.$set(this.results[groupId], projectId, [...this.results[groupId][projectId], ...moreResults.data]);
+
+					if (moreResults.data.length < this.pageSize) {
+						// Stop showing the load more button if there aren't more pages to fetch
+						this.$set(this.projectsQueried[projectId], 'hasMore', false);
+					}
+				}
+			} catch (e) {
+				// Set the stage to show them that an error occurred during fetching
+				this.$set(this.projectsQueried[projectId], 'error', e);
+				this.$set(this.projectsQueried[projectId], 'done', true);
+
+				console.error({ projectId, query: this.searchQuery, error: e }, 'Failed to get additional results for project');
+			}
+
+			// Turn off the loading animation
+			this.$set(this.projectsQueried[projectId], 'loading', false);
 		}
 	},
 	watch: {
