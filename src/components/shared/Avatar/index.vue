@@ -3,7 +3,11 @@
 		<q-img v-if="entity.avatarUrl" :src="entity.avatarUrl" contain spinner-color="secondary">
 			<template v-slot:error>
 				<!-- If, for some reason, we couldn't load the actual Avatar, pass in a sad face -->
-				<q-img src="/img/sad-face.png" contain class="absolute-full flex flex-center bg-white" />
+				<q-img src="/img/sad-face.png" contain class="absolute-full flex flex-center bg-white">
+					<q-tooltip>
+						Sorry, we couldn't load this image
+					</q-tooltip>
+				</q-img>
 			</template>
 		</q-img>
 		<!-- Finds the first *letter* in the name and capitalizes it -->

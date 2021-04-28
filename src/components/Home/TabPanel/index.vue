@@ -46,7 +46,7 @@
 			</q-card-section>
 
 			<q-card-section class="q-pt-none"
-				>Refreshing might do the trick. Otherwise, it's probably a permissions or project visibility project.</q-card-section
+				>Refreshing might do the trick. Otherwise, it's probably a permissions or project visibility problem.</q-card-section
 			>
 		</q-card>
 
