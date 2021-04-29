@@ -236,7 +236,7 @@ export default {
 				if (this.queryTime > 12) {
 					return '...or maybe your connection is just slow?';
 				} else if (this.queryTime > 9) {
-					return 'Holy cow this is a lot of stuff';
+					return 'Holy cow this is a big place';
 				} else if (this.queryTime > 6) {
 					return 'Rounding up stragglers...';
 				} else if (this.queryTime > 3) {
@@ -537,7 +537,7 @@ export default {
 					}
 
 					// Also search through all of the projects inside of each group and expand/collapse them
-					for (const childItem of expansionItem.$children[1].$children[0].$children) {
+					for (const childItem of expansionItem.$children[1].$children[1].$children) {
 						if (newVal) {
 							childItem.show();
 						} else {
