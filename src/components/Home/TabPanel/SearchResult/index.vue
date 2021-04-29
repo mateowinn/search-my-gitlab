@@ -27,7 +27,7 @@
 				<q-card-section horizontal class="q-pa-xs bg-black text-white">
 					<q-card-section class="q-pa-none">
 						<a
-							v-for="(piece, index) of getPieces(result.data)"
+							v-for="(piece, index) of getPieces(highlightedData)"
 							:key="`result-${result.project_id}-${resultIndex}-line-${index}`"
 							:href="`${result.url}#L${result.startline + index}`"
 							target="_blank"
@@ -44,16 +44,15 @@
 					<q-separator vertical dark />
 
 					<q-card-section class="q-pa-none code-line-container" style="overflow-x:auto;white-space: nowrap;">
-						<p
-							v-for="(piece, index) of getPieces(result.data)"
+						<pre
+							v-for="(piece, index) of getPieces(highlightedData)"
 							:key="`result-${result.project_id}-${resultIndex}-text-${index}`"
 							class="q-mb-none q-pa-xs q-px-sm code-line"
 							:class="{
 								'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
 							}"
-						>
-							{{ piece || '&nbsp;' }}
-						</p>
+							v-html="piece || '&nbsp;'"
+						></pre>
 					</q-card-section>
 				</q-card-section>
 			</div>
@@ -86,6 +85,13 @@ export default {
 		return {
 			expanded: true
 		};
+	},
+	computed: {
+		highlightedData() {
+			const highlighted = global.Rainbow.colorSync(this.result.data, this.result.ext);
+			console.log('highlighted', this.result.ext, highlighted);
+			return highlighted;
+		}
 	},
 	methods: {
 		/**

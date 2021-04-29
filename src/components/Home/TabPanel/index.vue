@@ -81,6 +81,8 @@ import AddConnection from './AddConnection/index';
 import SearchResult from './SearchResult/index';
 import Avatar from 'components/shared/Avatar/index';
 
+const maxResults = 20;
+
 export default {
 	name: 'TabPanel',
 	props: {
@@ -184,7 +186,7 @@ export default {
 									},
 									url: `${this.conn.domain}/api/v4/projects/${
 										project.id
-									}/search?scope=blobs&per_page=100&search=${encodeURIComponent(this.searchQuery)}`
+									}/search?scope=blobs&per_page=${maxResults}&search=${encodeURIComponent(this.searchQuery)}`
 								})
 									.then((response) => {
 										if (response.data && response.data.length > 0) {
@@ -195,13 +197,21 @@ export default {
 											// Append a dynamic link to this in order to be able to just open it in a new tab
 											for (const result of aggregatedResults[group.id][project.id]) {
 												result.url = `${project.webUrl}/-/blob/${result.ref}/${result.path}`;
+
+												const extIndex = result.filename.lastIndexOf('.');
+
+												if (extIndex > 0) {
+													result.ext = result.filename.substr(extIndex + 1);
+												} else {
+													result.ext = 'generic';
+												}
 											}
 
 											// Also add to our metadata, please
 											this.projectsWithResults += 1;
 											this.resultsCount += response.data.length;
 
-											if (response.data.length === 100) {
+											if (response.data.length === maxResults) {
 												// If we know we have to do any pagination
 												this.hasMore = true;
 											}
