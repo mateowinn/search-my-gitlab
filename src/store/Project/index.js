@@ -15,6 +15,24 @@ const Project = new Vue({
 	},
 	computed: {
 		/**
+		 * Gets a specific project from the indicated server and group by ID
+		 *
+		 * @param {Int} connIndex - the index of the particular connection we should fetch the project
+		 * @param {Int} groupId - the ID of the particular group from under which we should fetch the project
+		 * @param {Int} projectId - obviously, the ID of the project we want
+		 * @returns {Project}
+		 */
+		project() {
+			return (connIndex, groupId, projectId) => {
+				return (
+					this.allProjects[connIndex] !== undefined &&
+					this.allProjects[connIndex][groupId] &&
+					this.allProjects[connIndex][groupId].find((proj) => proj.id === +projectId)
+				);
+			};
+		},
+
+		/**
 		 * Gets a list of Projects from the specified server, key, and group
 		 *
 		 * @param {Connection} conn - the particular connection we should fetch projects from

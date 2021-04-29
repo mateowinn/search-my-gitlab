@@ -103,7 +103,14 @@ export default {
 
 			// If we have legit connection details, go and fetch all available groups from that connection
 			if (this.currentConn && this.currentConn.index !== undefined) {
-				groups = this.$store.Group.groups(this.currentConn) || [];
+				// To conserve on memory (in a project that fetches and displays possibly hundreds of results), we only keep here the attributes we use
+				groups = (this.$store.Group.groups(this.currentConn) || []).map((group) => {
+					return {
+						id: group.id,
+						name: group.name,
+						avatarUrl: group.avatarUrl
+					};
+				});
 			}
 
 			return groups;
@@ -115,33 +122,59 @@ export default {
 			// If we have our groups, go ahead and grab all of the projects accessible to us through those groups
 			for (const group of this.currentGroups) {
 				projects[group.id] = this.$store.Project.projects(this.currentConn, group);
+
+				if (projects[group.id]) {
+					// Conserve on memory by only keeping the stuff we need
+					projects[group.id] = projects[group.id].map((project) => {
+						return {
+							id: project.id,
+							name: project.name,
+							avatarUrl: project.avatarUrl,
+							archived: project.archived
+						};
+					});
+				}
 			}
 
 			return projects;
 		},
 
-		nonNullProjects() {
-			const nonNulls = {};
+		searchableProjects() {
+			const searchables = {};
 
 			for (const groupId of Object.keys(this.currentProjects)) {
 				if (this.currentProjects[groupId] !== null) {
-					nonNulls[groupId] = this.currentProjects[groupId];
+					searchables[groupId] = this.currentProjects[groupId];
+				}
+
+				// Also filter out the archived projects
+				if (searchables[groupId]) {
+					searchables[groupId] = searchables[groupId].filter((project) => {
+						return !project.archived;
+					});
 				}
 			}
 
-			return nonNulls;
+			return searchables;
 		},
 
-		nullProjects() {
-			const nonNulls = {};
+		nonSearchableProjects() {
+			const nonSearchables = {};
 
 			for (const groupId of Object.keys(this.currentProjects)) {
 				if (this.currentProjects[groupId] === null) {
-					nonNulls[groupId] = this.currentProjects[groupId];
+					nonSearchables[groupId] = null;
+				}
+
+				// Also include the archived projects
+				if (this.currentProjects[groupId]) {
+					nonSearchables[groupId] = this.currentProjects[groupId].filter((project) => {
+						return project.archived;
+					});
 				}
 			}
 
-			return nonNulls;
+			return nonSearchables;
 		},
 
 		filters() {
@@ -177,7 +210,7 @@ export default {
 			// We don't want to keep computing all of this until we've actually tried fetching all groups
 			if (
 				this.currentGroups.length !== Object.keys(this.currentProjects).length ||
-				Object.values(this.nonNullProjects).some((arr) => {
+				Object.values(this.searchableProjects).some((arr) => {
 					return arr === undefined;
 				})
 			) {
@@ -185,17 +218,17 @@ export default {
 			}
 
 			if (this.noFilters) {
-				return this.nonNullProjects;
+				return this.searchableProjects;
 			} else {
 				const filteredProjects = {};
 
 				// Go through every project in every group to determine whether it should be included in the searches
-				Object.keys(this.nonNullProjects).forEach((groupId) => {
+				Object.keys(this.searchableProjects).forEach((groupId) => {
 					// Skip the wait if this whole group has been requested
 					if (this.filters.groups && this.filters.groups.includes(+groupId)) {
-						filteredProjects[groupId] = [...this.nonNullProjects[groupId]];
+						filteredProjects[groupId] = [...this.searchableProjects[groupId]];
 					} else if (this.filters.projects) {
-						const eligibleProjects = this.nonNullProjects[groupId].filter((project) => {
+						const eligibleProjects = this.searchableProjects[groupId].filter((project) => {
 							// Include this if it has been named specifically in the filters
 							if (this.filters.projects.includes(project.id)) {
 								return true;
@@ -222,7 +255,7 @@ export default {
 			// We don't want to keep computing all of this until we've actually tried fetching all groups
 			if (
 				this.currentGroups.length !== Object.keys(this.currentProjects).length ||
-				Object.values(this.nonNullProjects).some((arr) => {
+				Object.values(this.searchableProjects).some((arr) => {
 					return arr === undefined;
 				})
 			) {
@@ -233,13 +266,12 @@ export default {
 			for (const group of this.currentGroups) {
 				const entry = {
 					id: group.id,
-					type: 'groups',
 					avatarUrl: group.avatarUrl,
 					label: group.name
 				};
 
 				// Don't forget to include all of this group's projects - IF they have them!
-				const groupProjects = this.nonNullProjects[group.id];
+				const groupProjects = this.searchableProjects[group.id];
 
 				if (!groupProjects || groupProjects.length < 1) {
 					// Uhh...nope. Not gonna deal with you.
@@ -250,21 +282,14 @@ export default {
 				entry.children = groupProjects.map((project) => {
 					return {
 						id: project.id,
-						type: 'projects',
 						label: project.name,
 						avatarUrl: project.avatarUrl,
-						checked: !!(
-							this.noFilters || // We want to show (only visually) everything as checked if the user has not specified any search filters
-							(this.filters.projects && this.filters.projects.indexOf(project.id) > -1)
-						)
+						checked: !!(this.filters.projects && this.filters.projects.indexOf(project.id) > -1)
 					};
 				});
 
 				// Compute how we want to show the group checkbox - checked, unchecked, or partially (because a group child is checked)
-				if (
-					this.noFilters || // We want to show (only visually) everything as checked if the user has not specified any search filters
-					(this.filters.groups && this.filters.groups.indexOf(group.id) > -1)
-				) {
+				if (this.filters.groups && this.filters.groups.indexOf(group.id) > -1) {
 					entry.checked = true;
 				} else if (entry.children && entry.children.length && entry.children.find((project) => project.checked === true)) {
 					entry.checked = null;

@@ -25,18 +25,29 @@
 				</q-card-section>
 			</q-card>
 
+			<!-- One line at the top to show whether we're searching ALL projects -->
+			<q-item>
+				<q-item-section side>
+					<q-checkbox :value="!someSelected" v-on:click.native="clearFilters" />
+				</q-item-section>
+
+				<q-item-section avatar>
+					<Avatar :entity="{ name: 'All', avatarUrl: '/img/all-checked.png' }" />
+				</q-item-section>
+
+				<q-item-section>
+					All Projects
+				</q-item-section>
+			</q-item>
+
 			<q-list v-for="group of drawerFilters" :key="'group' + group.id">
-				<!-- If the group link has children, we want an expansion item instead of a regular one -->
-				<q-expansion-item
-					v-if="group.children"
-					tag="label"
-					expand-separator
-					:content-inset-level="0.5"
-					expand-icon-class="text-menu-side-link"
-				>
+				<!-- We want an expansion item for every group, which will contain its own projects -->
+				<q-separator />
+				<q-expansion-item v-if="group.children" tag="label" expand-separator :content-inset-level="0.5">
 					<template v-slot:header>
+						<!-- Checkbox -->
 						<q-item-section side>
-							<q-checkbox toggle-indeterminate v-model="group.checked" v-on:click.native="toggleFilter(group.type, group.id)" dark />
+							<q-checkbox toggle-indeterminate v-model="group.checked" v-on:click.native="toggleFilter('groups', group.id)" />
 						</q-item-section>
 
 						<q-item-section avatar>
@@ -47,15 +58,12 @@
 							{{ group.label }}
 						</q-item-section>
 					</template>
+
 					<!-- Loop through the children (projects) and show them all -->
-					<q-item
-						v-for="project of group.children"
-						:key="'project' + project.id"
-						active-class="text-menu-side-link-active bg-menu-side-link-active-background"
-					>
-						<!-- The label and checkbox -->
+					<q-item v-for="project of group.children" :key="'project' + project.id">
+						<!-- Checkbox -->
 						<q-item-section side>
-							<q-checkbox v-model="project.checked" v-on:click.native="toggleFilter(project.type, project.id)" dark />
+							<q-checkbox v-model="project.checked" v-on:click.native="toggleFilter('projects', project.id)" />
 						</q-item-section>
 
 						<q-item-section avatar>
@@ -67,14 +75,6 @@
 						</q-item-section>
 					</q-item>
 				</q-expansion-item>
-
-				<!-- If no children, just show a top-level clickable link -->
-				<q-item v-else active-class="text-menu-side-link-active bg-menu-side-link-active-background">
-					<!-- The label and checkbox -->
-					<q-item-section>
-						<q-checkbox v-model="group.checked" :label="group.label" v-on:click.native="toggleFilter(group.type, group.id)" dark />
-					</q-item-section>
-				</q-item>
 			</q-list>
 		</q-scroll-area>
 	</q-drawer>
@@ -110,6 +110,21 @@ export default {
 			default: () => {
 				/* Nothing, I guess */
 			}
+		}
+	},
+	computed: {
+		someSelected() {
+			return this.drawerFilters.some((group) => {
+				if (group.checked) {
+					return true;
+				} else if (group.children) {
+					return group.children.some((project) => {
+						return project.checked;
+					});
+				} else {
+					return false;
+				}
+			});
 		}
 	},
 	methods: {
