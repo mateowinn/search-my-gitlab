@@ -236,7 +236,7 @@ export default {
 				if (this.queryTime > 12) {
 					return '...or maybe your connection is just slow?';
 				} else if (this.queryTime > 9) {
-					return 'Holy cow this is a lot of stuff';
+					return 'Holy cow this is a big place';
 				} else if (this.queryTime > 6) {
 					return 'Rounding up stragglers...';
 				} else if (this.queryTime > 3) {
@@ -302,10 +302,12 @@ export default {
 				for (const project of this.projects[group.id]) {
 					// Add each project with results that hasn't been filtered out
 					if (this.projectsQueried[project.id] && this.projectsQueried[project.id].error) {
+						const { webUrl } = this.getProjectByIds(group.id, project.id);
+
 						projectsWithErrors.push({
 							id: project.id,
 							name: project.name,
-							url: project.webUrl
+							url: webUrl
 						});
 					}
 				}
@@ -366,8 +368,9 @@ export default {
 											this.$set(this.results[groupId], project.id, response.data);
 
 											// Append a dynamic link to this in order to be able to just open it in a new tab
+											const { webUrl } = this.getProjectByIds(groupId, project.id);
 											for (const result of this.results[groupId][project.id]) {
-												result.url = `${project.webUrl}/-/blob/${result.ref}/${result.path}`;
+												result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
 											}
 
 											// Update some metadata figures
@@ -436,7 +439,7 @@ export default {
 		},
 
 		getProjectByIds(groupId, projectId) {
-			return this.projects[groupId].find((project) => project.id === +projectId);
+			return this.$store.Project.project(this.conn.index, groupId, projectId);
 		},
 
 		// Helps us determine whether we need to actually re-execute a search
@@ -537,7 +540,7 @@ export default {
 					}
 
 					// Also search through all of the projects inside of each group and expand/collapse them
-					for (const childItem of expansionItem.$children[1].$children[0].$children) {
+					for (const childItem of expansionItem.$children[1].$children[1].$children) {
 						if (newVal) {
 							childItem.show();
 						} else {

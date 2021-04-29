@@ -10,8 +10,9 @@
 				</q-img>
 			</template>
 		</q-img>
-		<!-- Finds the first *letter* in the name and capitalizes it -->
-		<template v-else>{{ (entity.name.match(/\b[a-zA-Z]/) || [entity.name.charAt(0)])[0].toUpperCase() }}</template>
+
+		<!-- Just the entity's name or initial -->
+		<template v-else>{{ displayName }}</template>
 	</q-avatar>
 </template>
 
@@ -25,6 +26,24 @@ export default {
 		entity: {
 			type: Object,
 			default: () => ({})
+		},
+		useFullName: {
+			type: Boolean,
+			default: false
+		}
+	},
+	computed: {
+		/**
+		 * Returns the full entity name if indicated. Otherwise, finds the first *letter* in the name and capitalizes it.
+		 *
+		 * @returns {String} Initial or full name
+		 */
+		displayName() {
+			if (this.entity.avatarUrl || this.useFullName) {
+				return this.entity.name;
+			} else {
+				return (this.entity.name.match(/\b[a-zA-Z]/) || [this.entity.name.charAt(0)])[0].toUpperCase();
+			}
 		}
 	},
 	methods: {

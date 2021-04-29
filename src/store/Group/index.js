@@ -15,6 +15,19 @@ const Group = new Vue({
 	},
 	computed: {
 		/**
+		 * Gets a specific group from the indicated server by ID
+		 *
+		 * @param {Int} connIndex - the index of the particular connection we should fetch the project
+		 * @param {Int} groupId - obviously, the ID of the group we want
+		 * @returns {Group}
+		 */
+		group() {
+			return (connIndex, groupId) => {
+				return this.allGroups[connIndex] && this.allGroups[connIndex][groupId];
+			};
+		},
+
+		/**
 		 * Gets a list of Groups from the specified server and key
 		 *
 		 * @param {Connection} conn - the particular connection we should fetch groups from
