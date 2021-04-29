@@ -47,7 +47,7 @@
 					<template v-slot:header>
 						<!-- Checkbox -->
 						<q-item-section side>
-							<q-checkbox toggle-indeterminate v-model="group.checked" v-on:click.native="toggleFilter(group.type, group.id)" />
+							<q-checkbox toggle-indeterminate v-model="group.checked" v-on:click.native="toggleFilter('groups', group.id)" />
 						</q-item-section>
 
 						<q-item-section avatar>
@@ -63,7 +63,7 @@
 					<q-item v-for="project of group.children" :key="'project' + project.id">
 						<!-- Checkbox -->
 						<q-item-section side>
-							<q-checkbox v-model="project.checked" v-on:click.native="toggleFilter(project.type, project.id)" />
+							<q-checkbox v-model="project.checked" v-on:click.native="toggleFilter('projects', project.id)" />
 						</q-item-section>
 
 						<q-item-section avatar>

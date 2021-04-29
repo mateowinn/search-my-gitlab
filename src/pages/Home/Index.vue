@@ -122,6 +122,18 @@ export default {
 			// If we have our groups, go ahead and grab all of the projects accessible to us through those groups
 			for (const group of this.currentGroups) {
 				projects[group.id] = this.$store.Project.projects(this.currentConn, group);
+
+				if (projects[group.id]) {
+					// Conserve on memory by only keeping the stuff we need
+					projects[group.id] = projects[group.id].map((project) => {
+						return {
+							id: project.id,
+							name: project.name,
+							avatarUrl: project.avatarUrl,
+							archived: project.archived
+						};
+					});
+				}
 			}
 
 			return projects;
@@ -254,7 +266,6 @@ export default {
 			for (const group of this.currentGroups) {
 				const entry = {
 					id: group.id,
-					type: 'groups',
 					avatarUrl: group.avatarUrl,
 					label: group.name
 				};
@@ -271,7 +282,6 @@ export default {
 				entry.children = groupProjects.map((project) => {
 					return {
 						id: project.id,
-						type: 'projects',
 						label: project.name,
 						avatarUrl: project.avatarUrl,
 						checked: !!(this.filters.projects && this.filters.projects.indexOf(project.id) > -1)
