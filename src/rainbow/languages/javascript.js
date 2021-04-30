@@ -81,6 +81,23 @@ global.Rainbow.extend(
 			pattern: /(\/)((?![*+?])(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+)(\/)(?!\/)([igm]{0,3})/g
 		},
 
+		// Just strings in general
+		{
+			name: 'string',
+			pattern: /("|'|`)(.*)("|'|`)/g
+		},
+
+		// Matches comments
+		{
+			name: 'comment',
+			matches: {
+				0: 'comment.first',
+				1: 'comment.first',
+				2: 'comment.first'
+			},
+			pattern: /(?<!(:|"|'|`))(\/\/|\/?\*)(.*?)(\*\/|$)/g
+		},
+
 		/**
 		 * matches runtime function declarations
 		 */

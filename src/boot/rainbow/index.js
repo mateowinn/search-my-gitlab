@@ -8,4 +8,4 @@ Rainbow.addAlias('js', 'javascript');
 
 // Import a language
 
-require('rainbow-code/src/language/javascript');
+require('src/rainbow/languages/javascript');
