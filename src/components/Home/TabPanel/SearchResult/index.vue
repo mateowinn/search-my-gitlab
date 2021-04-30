@@ -53,6 +53,17 @@
 							}"
 							v-html="piece || '&nbsp;'"
 						></pre>
+						<!-- <pre v-html="highlightedData">
+						<div
+								v-for="(piece, index) of getPieces(highlightedData)"
+								:key="`result-${result.project_id}-${resultIndex}-text-${index}`"
+								class="q-mb-none q-pa-xs q-px-sm code-line"
+								:class="{
+									'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
+								}"
+								v-html="piece"
+							/>
+						</pre> -->
 					</q-card-section>
 				</q-card-section>
 			</div>
@@ -61,6 +72,8 @@
 </template>
 
 <script>
+import highlightCode from 'utilities/highlightCode';
+
 export default {
 	name: 'SearchResult',
 	props: {
@@ -88,8 +101,9 @@ export default {
 	},
 	computed: {
 		highlightedData() {
-			const highlighted = global.Rainbow.colorSync(this.result.data, this.result.ext);
-			console.log('highlighted', this.result.ext, highlighted);
+			// const highlighted = global.Rainbow.colorSync(this.result.data, this.result.ext);
+			const highlighted = highlightCode(this.result.data, this.result.ext);
+			// console.log('highlighted', this.result.ext, JSON.stringify(highlighted));
 			return highlighted;
 		}
 	},
