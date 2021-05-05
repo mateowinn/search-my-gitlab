@@ -177,9 +177,7 @@ export default {
 		migrate() {
 			const newRoute = {
 				...this.$route,
-				query: {
-					domain: this.newIndex
-				}
+				path: `/${this.newIndex}`
 			};
 
 			this.$router.replace(newRoute);
