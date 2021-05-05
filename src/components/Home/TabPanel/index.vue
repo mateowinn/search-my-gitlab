@@ -27,6 +27,7 @@
 					>
 				</q-card-section>
 
+				<!-- Possible actions to take -->
 				<q-card-actions align="around">
 					<q-btn flat label="No, thanks. I'd rather not crash my browser." color="secondary" v-close-popup />
 					<q-btn flat label="Proceed anyway" color="grey-8" @click="initiateSearch(searchQuery, true)" v-close-popup />
@@ -41,6 +42,7 @@
 				of:</q-card-section
 			>
 
+			<!-- A list of projects we couldn't get results from in form of a link to the project -->
 			<q-card-section class="q-py-xs">
 				<template v-for="(error, index) of errorsToShow">
 					<a :href="error.url" target="_blank" :key="`search-error-${error.id}`">{{ error.name }}</a
@@ -54,7 +56,7 @@
 		</q-card>
 
 		<!-- Search metadata, i.e. how many results we found -->
-		<div v-if="results && Object.keys(results).length > 0" class="search-stats">
+		<div v-if="projectsToShow && !projectsToShow.none" class="search-stats">
 			<span class="text-grey-6"
 				>{{ resultsCount }}{{ someHaveMore ? '+' : '' }} result{{ resultsCount === 1 ? '' : 's' }} found in
 				{{ projectsWithResults }} project{{ projectsWithResults === 1 ? '' : 's' }}</span
@@ -68,12 +70,14 @@
 			<div class="text-h6 text-center">{{ loadingText }}</div>
 		</template>
 
-		<q-list v-if="!loading && projectsToShow && Object.keys(results).length > 0" separator bordered class="rounded-borders" ref="parentList">
-			<!-- Show a polite message if we actually have no results to show them -->
-			<div v-if="results.none" class="text-h6 text-center">Well, poop. We've got nothing that matches that criteria.</div>
+		<!-- Show a polite message if we actually have no results to show them -->
+		<div v-if="!loading && searchQuery && projectsToShow && projectsToShow.none" class="text-h6 text-center">
+			Well, poop. We've got nothing that matches that criteria.
+		</div>
 
+		<q-list v-if="!loading && projectsToShow && !projectsToShow.none" separator bordered class="rounded-borders" ref="parentList">
 			<!-- Woo-hoo! We've got results to show! -->
-			<q-expansion-item v-else v-for="(group, groupId) in projectsToShow" :key="'group-results-' + groupId">
+			<q-expansion-item v-for="(group, groupId) in projectsToShow" :key="'group-results-' + groupId">
 				<template v-slot:header>
 					<!-- Group picture -->
 					<q-item-section avatar>
@@ -162,6 +166,7 @@
 
 <script>
 import axios from 'axios';
+import logger from 'utilities/logger';
 import AddConnection from './AddConnection/index';
 import SearchResult from './SearchResult/index';
 import Avatar from 'components/shared/Avatar/index';
@@ -203,6 +208,8 @@ export default {
 	computed: {
 		/**
 		 * Just fetches the group objects of all the groups tied to the projects (filtered or unfiltered) that we've been given
+		 *
+		 * @returns {Array<Group>} - a list of all groups that actually contain a project in the search filters
 		 */
 		groups() {
 			const allGroups = this.$store.Group.groups(this.conn) || [];
@@ -213,6 +220,11 @@ export default {
 			});
 		},
 
+		/**
+		 * Simply counts how many projects we have to search from (i.e. not filtered out)
+		 *
+		 * @returns {Int} - the number of projects in our list of searchable projects
+		 */
 		projectCount() {
 			let count = 0;
 
@@ -225,14 +237,26 @@ export default {
 			return count;
 		},
 
+		/**
+		 * Dynamically calculates the percentage of projects successfully queried
+		 *
+		 * @returns {Float} - the number of projects queried divided by the number of projects still to finish querying
+		 */
 		loadingPerc() {
 			return Object.values(this.projectsQueried).filter((project) => project.loading === false).length / this.projectCount;
 		},
 
+		/**
+		 * Shows various messages during loading time. One dependent on the actual progress but the rest dependent on how long it takes to load.
+		 *
+		 * @returns {String} - the loading message we want to show to the user at any given moment
+		 */
 		loadingText() {
 			if (this.loadingPerc > 0.95) {
+				// A constant message we show when the search is almost finished
 				return 'Putting a bow on it...';
 			} else {
+				// Various messages depending on how long it has taken us to compile results
 				if (this.queryTime > 12) {
 					return '...or maybe your connection is just slow?';
 				} else if (this.queryTime > 9) {
@@ -247,6 +271,12 @@ export default {
 			}
 		},
 
+		/**
+		 * Filters our search results based on which projects we should actually be showing.This is useful because it means we don't have to
+		 * re-execute a search against all unfiltered projects each time that a user adds or removes a project or group from the filters.
+		 *
+		 * @returns {Object} - the search results we want to show according to the filters that the user has indicated. Is grouped by group and project.
+		 */
 		projectsToShow() {
 			const toShow = {};
 			// We also want to tally metadata
@@ -270,6 +300,7 @@ export default {
 							projectsWithResults += 1;
 
 							if (this.projectsQueried[project.id].hasMore) {
+								// If we think that any of these projects have more results, then raise the flag to show a "+" in our results count
 								someHaveMore = true;
 							}
 						}
@@ -295,6 +326,11 @@ export default {
 			return toShow;
 		},
 
+		/**
+		 * Automatically compiles a list of projects that we failed to get results from and their metadata
+		 *
+		 * @returns {Array<Object>} - an array of objects detailing the projects that we failed to get search results from
+		 */
 		errorsToShow() {
 			const projectsWithErrors = [];
 
@@ -319,22 +355,29 @@ export default {
 	methods: {
 		/**
 		 * Simply modifies our URL search query param, which triggers a search
+		 *
+		 * @param {String} query - the text to search for which the user has entered
+		 * @param {Boolean} confirmed - whether or not we've already warned this user about their small search query
 		 */
 		initiateSearch(query, confirmed) {
 			if (query.length < 4 && !confirmed) {
+				// If the user is attempting a really small query, then I'd really rather warn them of the consequences
 				this.confirmQuery = true;
 			} else {
+				// Update our URL, which will trigger a search
 				const routeQuery = {
 					...this.$route.query
 				};
 				routeQuery.search = query;
 
-				this.$router.replace({ path: '/', query: routeQuery });
+				this.$router.push({ path: '/', query: routeQuery });
 			}
 		},
 
 		/**
 		 * The function that actually executes the search. Is notified whenever a new query and/or filter changes are submitted and takes it away!
+		 *
+		 * @param {Object} projectsToSearch - the list (technically object) of projects, within their group divisions, that we should fetch search results for
 		 */
 		async executeSearch(projectsToSearch) {
 			// We only want to actually execute the query if we're looking at the right tab and we have a real search
@@ -342,7 +385,7 @@ export default {
 				this.queryTime = 0;
 				this.loading = true; // Show the loading animation
 
-				console.log({ query: this.searchQuery, connIndex: this.conn.index, projects: projectsToSearch }, 'Executing search');
+				logger.info({ query: this.searchQuery, connIndex: this.conn.index, projects: projectsToSearch }, 'Executing search');
 
 				// Now comes the fun part....cycling through every selected project in every group and aggregating the results
 				try {
@@ -362,8 +405,8 @@ export default {
 									}&search=${encodeURIComponent(this.searchQuery)}`
 								})
 									.then((response) => {
+										// I don't really want this to pop up in the list if it didn't actually return anything
 										if (response.data && response.data.length > 0) {
-											// I don't really want this to pop up in the list if it didn't actually return anything
 											this.$set(this.results, groupId, this.results[groupId] || {});
 											this.$set(this.results[groupId], project.id, response.data);
 
@@ -371,6 +414,15 @@ export default {
 											const { webUrl } = this.getProjectByIds(groupId, project.id);
 											for (const result of this.results[groupId][project.id]) {
 												result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
+
+												// Find out file extensions for syntax highlighting later on
+												const extIndex = result.filename.lastIndexOf('.');
+
+												if (extIndex > 0) {
+													result.ext = result.filename.substr(extIndex + 1);
+												} else {
+													result.ext = 'generic';
+												}
 											}
 
 											// Update some metadata figures
@@ -385,7 +437,7 @@ export default {
 										// Tracking the failures so that we can show the user what we couldn't search
 										this.$set(this.projectsQueried[project.id], 'error', e);
 
-										console.error(
+										logger.error(
 											{
 												error: e,
 												query: this.searchQuery,
@@ -426,7 +478,7 @@ export default {
 					// Fire them all off at the same time and wait for them all to resolve
 					await Promise.all(allSearchPromises);
 				} catch (e) {
-					console.error({ error: e, query: this.searchQuery }, 'Error executing searches');
+					logger.error({ error: e, query: this.searchQuery }, 'Error executing searches');
 				}
 
 				// Turn off the loading animation
@@ -434,15 +486,30 @@ export default {
 			}
 		},
 
+		/**
+		 * A convenience for grabbing ALL data of a group
+		 *
+		 * @param {Int|String} groupId - the ID of the group whose data you want
+		 */
 		getGroupById(groupId) {
 			return this.groups.find((group) => group.id === +groupId);
 		},
 
+		/**
+		 * A convenience for grabbing ALL data of a project
+		 *
+		 * @param {Int|String} groupId - the ID of the project's group
+		 * @param {Int|String} projectId - the ID of the project whose data you want
+		 */
 		getProjectByIds(groupId, projectId) {
 			return this.$store.Project.project(this.conn.index, groupId, projectId);
 		},
 
-		// Helps us determine whether we need to actually re-execute a search
+		/**
+		 * Helps us determine whether we need to actually re-execute a search. Looks at what projects we've already queried vs which we still need to query to find out the difference.
+		 *
+		 * @param {Object} projects - the list (technically) of projects that we've been notified we want searches of.
+		 */
 		getDiffNeeds(projects) {
 			const diff = {};
 
@@ -459,6 +526,12 @@ export default {
 			return diff;
 		},
 
+		/**
+		 * A function that allows us to load additional results for a single project. Adds the normal animations and extra data that we want.
+		 *
+		 * @param {Int|String} groupId - the ID of the project's group
+		 * @param {Int|String} projectId - the ID of the project we want to fetch more results from
+		 */
 		async loadMore(groupId, projectId) {
 			// A small animation to show the user we're fetching their additional results
 			this.$set(this.projectsQueried[projectId], 'loading', true);
@@ -485,6 +558,21 @@ export default {
 					// Combine these results with the previous
 					this.$set(this.results[groupId], projectId, [...this.results[groupId][projectId], ...moreResults.data]);
 
+					// Append a dynamic link to this in order to be able to just open it in a new tab
+					const { webUrl } = this.getProjectByIds(groupId, projectId);
+					for (const result of this.results[groupId][projectId]) {
+						result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
+
+						// Find out file extensions for syntax highlighting later on
+						const extIndex = result.filename.lastIndexOf('.');
+
+						if (extIndex > 0) {
+							result.ext = result.filename.substr(extIndex + 1);
+						} else {
+							result.ext = 'generic';
+						}
+					}
+
 					if (moreResults.data.length < this.pageSize) {
 						// Stop showing the load more button if there aren't more pages to fetch
 						this.$set(this.projectsQueried[projectId], 'hasMore', false);
@@ -495,7 +583,7 @@ export default {
 				this.$set(this.projectsQueried[projectId], 'error', e);
 				this.$set(this.projectsQueried[projectId], 'done', true);
 
-				console.error({ projectId, query: this.searchQuery, error: e }, 'Failed to get additional results for project');
+				logger.error({ projectId, query: this.searchQuery, error: e }, 'Failed to get additional results for project');
 			}
 
 			// Turn off the loading animation
@@ -503,10 +591,12 @@ export default {
 		}
 	},
 	watch: {
+		/**
+		 * Every time we get a new query, we want to re-execute the entire thing
+		 */
 		'$route.query.search': {
 			immediate: true,
 			handler() {
-				// Every time we get a new query, we want to re-execute the entire thing
 				// Reset a bunch of figures related to our results
 				this.$set(this, 'results', {});
 				this.$set(this, 'projectsQueried', {});
@@ -519,6 +609,9 @@ export default {
 				this.executeSearch(this.projects);
 			}
 		},
+		/**
+		 * Every time our list of searchable projects changes we want to see if a search execution is necessary
+		 */
 		projects: {
 			immediate: true,
 			handler(newVal) {
@@ -529,6 +622,11 @@ export default {
 				this.executeSearch(needs);
 			}
 		},
+		/**
+		 * If the user clicked on expand/collapse all, we use this to find all expansion items in the results and update their state
+		 *
+		 * @param {Boolean} newVal - the updated state; `true` for expand, `false` for collapse
+		 */
 		expandAll: {
 			handler(newVal) {
 				for (const expansionItem of this.$refs.parentList.$children) {

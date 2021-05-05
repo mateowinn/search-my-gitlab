@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import axios from 'axios';
-// import logger from 'client-logger';
+import logger from 'utilities/logger';
 import cloneObj from 'utilities/cloneObj';
 
 // Our Project data definitions
@@ -79,7 +79,7 @@ const Project = new Vue({
 							// Mark this as null in our list as a sign that there was an error
 							this.$set(this.allProjects[conn.index], group.id, null);
 
-							console.error(
+							logger.error(
 								{
 									error: e,
 									connection: conn.index,

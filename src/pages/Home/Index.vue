@@ -371,7 +371,9 @@ export default {
 			this.$router.replace({
 				...this.$router.currentRoute,
 				query: {
-					domain: this.$route.query.domain // Clear everything BUT the current domain index
+					// Clear everything BUT the current domain index and the current search
+					domain: this.$route.query.domain,
+					search: this.$route.query.search
 				}
 			});
 		},
@@ -384,8 +386,8 @@ export default {
 		 * When the user switches between domains/connections, we don't want to carry any other filters or search queries in the URL
 		 */
 		'$route.query.domain': {
-			handler() {
-				this.clearAllFilters();
+			handler(newDomain) {
+				this.navigateToDomain(newDomain);
 			}
 		}
 	},
