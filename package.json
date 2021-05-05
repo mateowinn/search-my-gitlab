@@ -17,8 +17,7 @@
 		"@quasar/extras": "^1.10.4",
 		"axios": "^0.21.1",
 		"core-js": "^3.11.0",
-		"quasar": "^1.0.0",
-		"rainbow-code": "^2.1.7"
+		"quasar": "^1.0.0"
 	},
 	"devDependencies": {
 		"@quasar/app": "^2.0.0",

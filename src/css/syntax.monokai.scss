@@ -1,0 +1,88 @@
+pre {
+	position: relative;
+	background-color: #000;
+	// word-wrap: break-word;
+	margin: 0px;
+	color: #fff;
+	font-family: 'Monaco', 'Menlo', courier, monospace;
+
+	& .comment {
+		color: #75715e;
+
+		&.docstring {
+			color: #e6db74;
+		}
+
+		&.tag {
+			color: #66d9ef;
+			font-style: italic;
+		}
+	}
+
+	& .function {
+		&.declaration,
+		&.arrow {
+			color: #66d9ef;
+			font-style: italic;
+		}
+
+		&.call {
+			color: #a6e22e;
+		}
+	}
+
+	& .globals {
+		color: #66d9ef;
+		font-style: italic;
+	}
+
+	& .keyword {
+		color: #f92672;
+	}
+
+	& .object {
+		&.property {
+			color: #f92672;
+		}
+	}
+
+	& .operator {
+		color: #f92672;
+	}
+
+	& .parameter {
+		color: #f89635;
+	}
+
+	& .primitive {
+		color: #ae81ff;
+	}
+
+	& .selector {
+		color: #f92672;
+	}
+
+	& .storage {
+		color: #66d9ef;
+		font-style: italic;
+	}
+
+	& .string {
+		color: #e6db74;
+	}
+
+	& .this {
+		color: #f89635;
+	}
+
+	& .variable {
+		&.type {
+			color: #66d9ef;
+			font-style: italic;
+		}
+	}
+}
+
+code {
+	font-family: 'Monaco', 'Menlo', courier, monospace;
+}

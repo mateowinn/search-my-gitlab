@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import axios from 'axios';
-// import logger from 'client-logger';
+import logger from 'utilities/logger';
 import cloneObj from 'utilities/cloneObj';
 
 // Our Group data definitions
@@ -64,7 +64,7 @@ const Group = new Vue({
 							// Mark it as null as a sign that we failed to fetch them
 							this.$set(this.allGroups, conn.index, null);
 
-							console.error(
+							logger.error(
 								{
 									error: e,
 									connection: conn.index

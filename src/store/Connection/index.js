@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import axios from 'axios';
-// import logger from 'client-logger';
+import logger from 'utilities/logger';
 import cloneObj from 'utilities/cloneObj';
 
 // Constants
@@ -108,7 +108,7 @@ const Connection = new Vue({
 
 				if (e.response) {
 					// This means it's a valid Gitlab URL
-					console.error(
+					logger.error(
 						{
 							error: e.response.data,
 							domain,
@@ -122,7 +122,7 @@ const Connection = new Vue({
 					}
 				} else {
 					// We didn't get a valid Gitlab URL; or perhaps their network doesn't work
-					console.error(
+					logger.error(
 						{
 							error: e.message,
 							domain,

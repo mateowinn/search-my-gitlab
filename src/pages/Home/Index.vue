@@ -386,8 +386,8 @@ export default {
 		 * When the user switches between domains/connections, we don't want to carry any other filters or search queries in the URL
 		 */
 		'$route.query.domain': {
-			handler() {
-				this.navigateToDomain();
+			handler(newDomain) {
+				this.navigateToDomain(newDomain);
 			}
 		}
 	},

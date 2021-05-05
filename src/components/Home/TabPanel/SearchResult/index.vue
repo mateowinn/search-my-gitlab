@@ -1,7 +1,10 @@
 <template>
+	<!-- We display each search results in a stylish card-like element -->
 	<q-card class="q-ma-sm" bordered>
+		<!-- If the user clicks on the header of the card, they can expand/collapse the card's contents -->
 		<q-card-actions class="q-pa-sm cursor-pointer" style="overflow: auto; white-space: nowrap;" @click.prevent="expanded = !expanded">
 			<div class="text-subtitle1 text-weight-bold">
+				<!-- Show the file name and path, and add a link icon that will allow the user to go straight to that file in Gitlab -->
 				<q-icon name="description" size="xs" style="vertical-align: text-top;" />
 				{{ result.path }}
 				<q-btn
@@ -19,15 +22,18 @@
 
 			<q-space />
 
+			<!-- An icon that simply makes it clear that the card is expandable/collapsible -->
 			<q-icon color="grey-7" size="sm" :name="expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'" />
 		</q-card-actions>
 
+		<!-- The actual code contents and line numbers -->
 		<q-slide-transition>
 			<div v-show="expanded">
 				<q-card-section horizontal class="q-pa-xs bg-black text-white">
+					<!-- This section simply shows line numbers alongside a link that allows the user to jump straight to that line in Gitlab -->
 					<q-card-section class="q-pa-none">
 						<a
-							v-for="(piece, index) of getPieces(highlightedData)"
+							v-for="(piece, index) of highlightedPieces"
 							:key="`result-${result.project_id}-${resultIndex}-line-${index}`"
 							:href="`${result.url}#L${result.startline + index}`"
 							target="_blank"
@@ -41,29 +47,21 @@
 						</a>
 					</q-card-section>
 
+					<!-- A semantic separator between line numbers and actual lines of code -->
 					<q-separator vertical dark />
 
+					<!-- This is the section that actually has the code in its divided lines -->
 					<q-card-section class="q-pa-none code-line-container" style="overflow-x:auto;white-space: nowrap;">
+						<!-- Additional classes are added to the lines that we detect actually contain the search query -->
 						<pre
-							v-for="(piece, index) of getPieces(highlightedData)"
+							v-for="(piece, index) of highlightedPieces"
 							:key="`result-${result.project_id}-${resultIndex}-text-${index}`"
 							class="q-mb-none q-pa-xs q-px-sm code-line"
 							:class="{
-								'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
+								'bg-grey-9': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
 							}"
 							v-html="piece || '&nbsp;'"
 						></pre>
-						<!-- <pre v-html="highlightedData">
-						<div
-								v-for="(piece, index) of getPieces(highlightedData)"
-								:key="`result-${result.project_id}-${resultIndex}-text-${index}`"
-								class="q-mb-none q-pa-xs q-px-sm code-line"
-								:class="{
-									'bg-grey-8': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
-								}"
-								v-html="piece"
-							/>
-						</pre> -->
 					</q-card-section>
 				</q-card-section>
 			</div>
@@ -72,7 +70,7 @@
 </template>
 
 <script>
-import highlightCode from 'utilities/highlightCode';
+import highlightCode from 'src/syntax/highlightCode';
 
 export default {
 	name: 'SearchResult',
@@ -100,31 +98,43 @@ export default {
 		};
 	},
 	computed: {
+		/**
+		 * Hands off the string of code to a utility function that injects highlight spans so that we can show syntax-highlighted code wherever possible
+		 *
+		 * @returns {String} - the search result, possibly highlighted
+		 */
 		highlightedData() {
-			// const highlighted = global.Rainbow.colorSync(this.result.data, this.result.ext);
 			const highlighted = highlightCode(this.result.data, this.result.ext);
-			// console.log('highlighted', this.result.ext, JSON.stringify(highlighted));
 			return highlighted;
-		}
-	},
-	methods: {
+		},
+
 		/**
 		 * Splits a return search text value from Gitlab based on newline characters
+		 *
+		 * @returns {Array<String>} - a list of code lines to display, divided by newline characters
 		 */
-		getPieces(resultStr) {
-			const pieces = resultStr.split('\n');
+		highlightedPieces() {
+			const pieces = this.highlightedData.split('\n');
 
-			// We often get blank lines (don't know why), so let's filter those out
-			for (let i = pieces.length - 1; i > 0; i--) {
-				if (!pieces[i]) {
-					pieces.splice(i, 1);
+			for (let i = pieces.length - 1; i > -1; i--) {
+				// Our highlighting process sometimes closes its spans on different lines
+				if (pieces[i] && pieces[i].startsWith('</span>')) {
+					pieces[i - 1] += '</span>';
+					pieces[i] = pieces[i].substr(7, pieces[i].length - 1);
 				}
 			}
 
+			// We often get blank lines at the end (don't know why), so let's filter those out
+			if (!pieces[pieces.length - 1]) {
+				pieces.splice(pieces.length - 1, 1);
+			}
 			return pieces;
 		}
 	},
 	watch: {
+		/**
+		 * Watches for if the user clicks on the overall expand/collapse button and updates this card accordingly
+		 */
 		expandAll: {
 			handler(newVal) {
 				this.expanded = newVal;
