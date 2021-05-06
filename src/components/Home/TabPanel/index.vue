@@ -5,7 +5,7 @@
 		<!-- Our search bar and link to open filters -->
 		<q-card flat class="search-container text-right q-pa-none">
 			<a href="#" @click.prevent.stop="toggleDrawer">Adjust Search Scope</a>
-			<q-input filled v-model="searchQuery" label="Search" hint="E.g. 'foo bar baz'" @keyup.enter="initiateSearch(searchQuery)">
+			<q-input filled v-model="searchQuery" label="Search" hint="E.g. 'foo bar baz'" @keyup.enter="initiateSearch(searchQuery)" clearable>
 				<template v-slot:append>
 					<q-icon name="search" @click="initiateSearch(searchQuery)" />
 				</template>
@@ -56,7 +56,7 @@
 		</q-card>
 
 		<!-- Search metadata, i.e. how many results we found -->
-		<div v-if="projectsToShow && !projectsToShow.none" class="search-stats">
+		<div v-if="projectsToShow && Object.keys(projectsToShow).length > 0 && !projectsToShow.none" class="search-stats">
 			<span class="text-grey-6"
 				>{{ resultsCount }}{{ someHaveMore ? '+' : '' }} result{{ resultsCount === 1 ? '' : 's' }} found in
 				{{ projectsWithResults }} project{{ projectsWithResults === 1 ? '' : 's' }}</span
@@ -75,7 +75,13 @@
 			Well, poop. We've got nothing that matches that criteria.
 		</div>
 
-		<q-list v-if="!loading && projectsToShow && !projectsToShow.none" separator bordered class="rounded-borders" ref="parentList">
+		<q-list
+			v-if="!loading && projectsToShow && Object.keys(projectsToShow).length > 0 && !projectsToShow.none"
+			separator
+			bordered
+			class="rounded-borders"
+			ref="parentList"
+		>
 			<!-- Woo-hoo! We've got results to show! -->
 			<q-expansion-item v-for="(group, groupId) in projectsToShow" :key="'group-results-' + groupId">
 				<template v-slot:header>
@@ -370,7 +376,7 @@ export default {
 				};
 				routeQuery.search = query;
 
-				this.$router.push({ path: '/', query: routeQuery });
+				this.$router.push({ path: this.$route.path, query: routeQuery });
 			}
 		},
 
@@ -381,7 +387,7 @@ export default {
 		 */
 		async executeSearch(projectsToSearch) {
 			// We only want to actually execute the query if we're looking at the right tab and we have a real search
-			if (this.$route.query.search && +this.$route.query.domain === this.conn.index && Object.keys(projectsToSearch).length > 0) {
+			if (this.$route.query.search && +this.$route.params.domain === this.conn.index && Object.keys(projectsToSearch).length > 0) {
 				this.queryTime = 0;
 				this.loading = true; // Show the loading animation
 

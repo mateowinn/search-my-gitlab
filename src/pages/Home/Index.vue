@@ -1,6 +1,6 @@
 <template>
 	<q-page>
-		<q-card square style="min-height: inherit;">
+		<q-card square style="min-height: inherit; padding-bottom: 20px;">
 			<!-- Tab dividers -->
 			<q-tabs
 				:value="tabIndex"
@@ -61,12 +61,12 @@ export default {
 	},
 	computed: {
 		/**
-		 * Simply calculates which tab (connection) we should show based on the URL query param
+		 * Simply calculates which tab (connection) we should show based on the URL path param
 		 *
 		 * @returns {Int|String} - the index or name of the tab we should focus on
 		 */
 		tabIndex() {
-			const domain = this.$route.query.domain;
+			const domain = this.$route.params.domain;
 
 			if (+domain === +domain) {
 				return +domain;
@@ -355,9 +355,6 @@ export default {
 					} // Non-array values don't need to be changed
 				});
 
-				// Also, don't forget to keep the domain index!
-				filters.domain = this.$route.query.domain;
-
 				this.$router.replace({
 					...this.$router.currentRoute,
 					query: filters
@@ -371,21 +368,20 @@ export default {
 			this.$router.replace({
 				...this.$router.currentRoute,
 				query: {
-					// Clear everything BUT the current domain index and the current search
-					domain: this.$route.query.domain,
+					// Clear everything BUT the current search
 					search: this.$route.query.search
 				}
 			});
 		},
 		navigateToDomain(domain) {
-			this.$router.replace({ path: '/', query: { domain } });
+			this.$router.replace({ path: `/${domain}` });
 		}
 	},
 	watch: {
 		/**
 		 * When the user switches between domains/connections, we don't want to carry any other filters or search queries in the URL
 		 */
-		'$route.query.domain': {
+		'$route.params.domain': {
 			handler(newDomain) {
 				this.navigateToDomain(newDomain);
 			}
@@ -401,10 +397,10 @@ export default {
 	 */
 	created() {
 		// Do we already have a domain specified to show?
-		const queryDomain = this.$route.query.domain;
-		const isNum = +queryDomain === +queryDomain;
+		const domainPath = this.$route.params.domain;
+		const isNum = +domainPath === +domainPath;
 
-		if ((!isNum && queryDomain !== 'add') || (isNum && this.connections.length < 2)) {
+		if ((!isNum && domainPath !== 'add') || (isNum && this.connections.length < 2) || (isNum && !this.connections[domainPath])) {
 			// Looks like we don't, so, let's set one!
 			if (this.connections.length > 1) {
 				// The user already has connection info setup but didn't specify which one to look at yet

@@ -1,27 +1,35 @@
 <template>
 	<div style="max-width: 600px;">
-		<!-- We like to show this intro only in the case that this appears to be the first time the user has used the site. -->
-		<div v-if="hasNone" class="text-center">
-			<!-- <q-avatar square size="100px"> -->
+		<div class="text-center q-px-md">
+			<!-- Site logo -->
 			<q-icon size="100px">
 				<SearchMyGitlabLogo />
 			</q-icon>
-			<!-- </q-avatar> -->
 
-			<h1 class="text-h4">
-				Welcome to Search My Gitlab!
-			</h1>
+			<!-- We like to show this intro only in the case that this appears to be the first time the user has used the site. -->
+			<template v-if="hasNone">
+				<h1 class="text-h4">
+					Welcome to Search My Gitlab!
+				</h1>
 
-			<p>
-				Here, you can search all repos in your Gitlab instance simultaneously for free! No more need to mindlessly open and search every repo
-				one at a time, nor spend a ton of money upgrading to a higher Gitlab tier
-				<i>just</i> so you can use ElasticSearch.
-			</p>
+				<p>
+					Here, you can search all repos in your Gitlab instance simultaneously for free! No more need to mindlessly open and search every
+					repo one at a time, nor spend a ton of money upgrading to a higher Gitlab tier
+					<i>just</i> so you can use ElasticSearch.
+				</p>
 
-			<p>
-				Just enter your Gitlab URL and an access token and you'll be well on your way to code-search heaven. We don't save this information
-				anywhere but on your browser - don't believe us? Go ahead and check your network tab in the dev tools. Happy searches!
-			</p>
+				<p>
+					Just enter your Gitlab URL and an access token and you'll be well on your way to code-search heaven. We don't save this
+					information anywhere but on your browser - don't believe us? Go ahead and check your network tab in the dev tools. Happy searches!
+				</p>
+			</template>
+
+			<!-- Otherwise, we just get out of the way, for the most part. -->
+			<template v-else>
+				<h1 class="text-h5">
+					...yeah. You know what to do.
+				</h1>
+			</template>
 		</div>
 
 		<!-- A pop-up dialog we can use for telling the user what happened in event of error -->
@@ -57,10 +65,11 @@
 		</q-dialog>
 
 		<!-- Our actual form for accepting URL and token -->
-		<q-form @submit="onSubmit" :autofocus="!hasNone" class="q-gutter-md q-pt-md text-center">
+		<q-form @submit="onSubmit" :autofocus="!hasNone" class="q-gutter-md q-pa-md text-center">
 			<!-- Gitlab URL input -->
 			<q-input
 				filled
+				type="text"
 				v-model="domain"
 				label="Your Gitlab URL"
 				hint="E.g. https://gitlab.com"
@@ -74,9 +83,10 @@
 			<!-- Token input -->
 			<q-input
 				filled
+				type="text"
 				v-model="token"
 				label="Your Gitlab Access Token"
-				lazy-rules
+				lazy-rules="ondemand"
 				:rules="[(val) => (val && val.length > 0) || 'Please provide a personal access token']"
 			>
 				<!-- We have to use a v-slot if we want HTML in our hint -->
@@ -177,9 +187,7 @@ export default {
 		migrate() {
 			const newRoute = {
 				...this.$route,
-				query: {
-					domain: this.newIndex
-				}
+				path: `/${this.newIndex}`
 			};
 
 			this.$router.replace(newRoute);
