@@ -1,8 +1,9 @@
 <template>
 	<q-layout view="lHh Lpr lFf">
+		<!-- Header bar with logo and name -->
 		<q-header elevated>
 			<q-toolbar>
-				<q-btn flat>
+				<q-btn flat :to="{ path: '/0' }">
 					<q-avatar square>
 						<q-icon>
 							<SearchMyGitlabLogo />
@@ -15,17 +16,25 @@
 			</q-toolbar>
 		</q-header>
 
-		<q-page-container>
+		<!-- The actual page content -->
+		<q-page-container style="padding-bottom: 0;">
 			<router-view />
 		</q-page-container>
+
+		<!-- Our footer! -->
+		<Footer />
 	</q-layout>
 </template>
 
 <script>
-import SearchMyGitlabLogo from 'src/components/shared/SearchMyGitlabLogo/index';
+import SearchMyGitlabLogo from 'src/components/shared/SearchMyGitlabLogo';
+import Footer from 'src/components/shared/Footer';
 
 export default {
 	name: 'MainLayout',
-	components: { SearchMyGitlabLogo }
+	components: {
+		SearchMyGitlabLogo,
+		Footer
+	}
 };
 </script>

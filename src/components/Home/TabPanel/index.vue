@@ -5,7 +5,7 @@
 		<!-- Our search bar and link to open filters -->
 		<q-card flat class="search-container text-right q-pa-none">
 			<a href="#" @click.prevent.stop="toggleDrawer">Adjust Search Scope</a>
-			<q-input filled v-model="searchQuery" label="Search" hint="E.g. 'foo bar baz'" @keyup.enter="initiateSearch(searchQuery)">
+			<q-input filled v-model="searchQuery" label="Search" hint="E.g. 'foo bar baz'" @keyup.enter="initiateSearch(searchQuery)" clearable>
 				<template v-slot:append>
 					<q-icon name="search" @click="initiateSearch(searchQuery)" />
 				</template>

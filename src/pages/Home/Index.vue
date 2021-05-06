@@ -1,6 +1,6 @@
 <template>
 	<q-page>
-		<q-card square style="min-height: inherit;">
+		<q-card square style="min-height: inherit; padding-bottom: 20px;">
 			<!-- Tab dividers -->
 			<q-tabs
 				:value="tabIndex"
