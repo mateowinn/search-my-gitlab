@@ -10,6 +10,7 @@
 			transition-prev="slide-right"
 			transition-next="slide-left"
 			infinite
+			autoplay
 			padding
 			arrows
 			navigation

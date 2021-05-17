@@ -9,6 +9,7 @@
 			</q-avatar>
 		</q-btn>
 
+		<!-- A modal to show spunky messages -->
 		<q-dialog v-model="showModal">
 			<q-card>
 				<q-card-section v-if="modalHeader">
@@ -37,6 +38,12 @@
 				<q-item>
 					<q-item-section>
 						<a href="#" @click.prevent.stop="updateModal('blog')">Blog</a>
+					</q-item-section>
+				</q-item>
+
+				<q-item>
+					<q-item-section>
+						<a href="https://owalalife.com/" target="_blank">Hydrate</a>
 					</q-item-section>
 				</q-item>
 
@@ -86,6 +93,10 @@ export default {
 		};
 	},
 	methods: {
+		/**
+		 * Takes in a specified scenario and sets the modal text accordingly. Then opens the modal.
+		 * @param {String} scenario - the name of the scenario that we want to display in the modal
+		 */
 		updateModal(scenario) {
 			switch (scenario) {
 				case 'blog':

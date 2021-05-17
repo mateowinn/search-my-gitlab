@@ -1,7 +1,7 @@
 <template>
 	<q-page>
-		<div class="intros q-pa-md text-subtitle2">
-			<h2 class="text-h5 text-primary text-bold">
+		<div class="intros q-pa-md text-subtitle1">
+			<h2 class="text-h4 text-primary text-bold">
 				What's Going on Here?
 			</h2>
 			<p>
@@ -10,7 +10,7 @@
 				<a href="https://www.youtube.com/watch?v=waEC-8GFTP4" target="_blank">Ain't nobody got time for that.</a>
 			</p>
 
-			<h2 class="text-h5 text-primary text-bold">
+			<h2 class="text-h4 text-primary text-bold">
 				Yeah? So?
 			</h2>
 			<p>

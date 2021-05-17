@@ -3,7 +3,7 @@
 		<!-- Header bar with logo and name -->
 		<q-header elevated>
 			<q-toolbar>
-				<q-btn flat :to="{ path: '/0' }">
+				<q-btn flat :to="{ path: '/' }">
 					<q-avatar square>
 						<q-icon>
 							<SearchMyGitlabLogo />
