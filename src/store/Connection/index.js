@@ -87,7 +87,7 @@ const Connection = new Vue({
 					headers: {
 						'Private-Token': token
 					},
-					url: `${domain}/api/v4/groups`
+					url: `${domain}/api/v4/projects?membership=true`
 				});
 
 				if (response.data && response.data.length > 0) {

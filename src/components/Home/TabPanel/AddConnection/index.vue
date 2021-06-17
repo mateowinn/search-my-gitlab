@@ -33,19 +33,7 @@
 		</div>
 
 		<!-- A pop-up dialog we can use for telling the user what happened in event of error -->
-		<q-dialog :value="!!error" @hide="error = ''">
-			<q-card>
-				<q-card-section>
-					<div class="text-h6">Well, this is awkward.</div>
-				</q-card-section>
-
-				<q-card-section v-html="error" class="q-py-none"></q-card-section>
-
-				<q-card-actions align="right">
-					<q-btn flat label="Retry" color="primary" v-close-popup />
-				</q-card-actions>
-			</q-card>
-		</q-dialog>
+		<ErrorDialog :error="error" :hide="() => (error = '')" :action-label="'Let me retry'" />
 
 		<!-- Conversely, a pop-up to tell the user success if that happened -->
 		<q-dialog :value="newIndex !== null" persistent>
@@ -119,6 +107,7 @@
 </template>
 
 <script>
+import ErrorDialog from 'src/components/shared/ErrorDialog/index';
 import SearchMyGitlabLogo from 'src/components/shared/SearchMyGitlabLogo/index';
 
 export default {
@@ -195,6 +184,7 @@ export default {
 	},
 
 	components: {
+		ErrorDialog,
 		SearchMyGitlabLogo
 	}
 };

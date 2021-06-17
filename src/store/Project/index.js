@@ -6,7 +6,8 @@ import cloneObj from 'utilities/cloneObj';
 // Our Project data definitions
 const projectData = {
 	allProjects: {},
-	fetched: {}
+	fetched: {},
+	pageErrors: {}
 };
 
 const Project = new Vue({
@@ -15,87 +16,103 @@ const Project = new Vue({
 	},
 	computed: {
 		/**
-		 * Gets a specific project from the indicated server and group by ID
+		 * Gets a specific project from the indicated server
 		 *
 		 * @param {Int} connIndex - the index of the particular connection we should fetch the project
-		 * @param {Int} groupId - the ID of the particular group from under which we should fetch the project
 		 * @param {Int} projectId - obviously, the ID of the project we want
 		 * @returns {Project}
 		 */
 		project() {
-			return (connIndex, groupId, projectId) => {
-				return (
-					this.allProjects[connIndex] !== undefined &&
-					this.allProjects[connIndex][groupId] &&
-					this.allProjects[connIndex][groupId].find((proj) => proj.id === +projectId)
-				);
+			return (connIndex, projectId) => {
+				return this.allProjects[connIndex] !== undefined && this.allProjects[connIndex].find((proj) => proj.id === +projectId);
 			};
 		},
 
 		/**
-		 * Gets a list of Projects from the specified server, key, and group
+		 * Gets a list of Projects from the specified server and key that the user is a member of
 		 *
 		 * @param {Connection} conn - the particular connection we should fetch projects from
-		 * @param {Group} group - the particular group from under which we should fetch projects
-		 * @returns {Array} - a list of projects from the specified connection and group. Undefined if those projects haven't been fetched yet.
+		 * @returns {Array} - a list of projects from the specified connection. Undefined if those projects haven't been fetched yet.
 		 */
 		projects() {
-			return (conn, group) => {
-				if (this.allProjects[conn.index] === undefined) {
-					// Make sure not to throw any errors by trying to access groups under a connection that we haven't initialized
-					this.$set(this.allProjects, conn.index, {});
-					this.$set(this.fetched, conn.index, {});
-				}
-
-				if (this.allProjects[conn.index][group.id] === undefined && !this.fetched[conn.index][group.id]) {
+			return (conn) => {
+				if (this.allProjects[conn.index] === undefined && !this.fetched[conn.index]) {
 					// Mark this as fetch initiated
-					this.$set(this.fetched[conn.index], group.id, true);
+					this.$set(this.fetched, conn.index, true);
+					this.$set(this.allProjects, conn.index, []);
+					this.$set(this.pageErrors, conn.index, {});
 
-					axios({
-						method: 'get',
-						headers: {
-							'Private-Token': conn.token
-						},
-						url: `${conn.domain}/api/v4/groups/${group.id}/projects?per_page=100`
-					})
-						.then((response) => {
-							// Update this group's projects in our running list, but filter them first
-							const filtered = [];
-							for (const project of response.data) {
-								filtered.push({
-									id: project.id,
-									name: project.name,
-									defaultBranch: project.default_branch,
-									webUrl: project.web_url,
-									avatarUrl: project.avatar_url,
-									archived: project.archived,
-									groupId: project.namespace.id
-								});
-							}
-
-							this.$set(this.allProjects[conn.index], group.id, filtered);
-						})
-						.catch((e) => {
-							// Mark this as null in our list as a sign that there was an error
-							this.$set(this.allProjects[conn.index], group.id, null);
-
-							logger.error(
-								{
-									error: e,
-									connection: conn.index,
-									group: group.id
-								},
-								'Failed to get projects with specified connection and group'
-							);
-						});
+					// Recursively fetch all projects
+					this.fetchProjectsByPage(conn, 1);
 				}
 
 				// Return whatever we have right now
-				return cloneObj(this.allProjects[conn.index][group.id]);
+				return cloneObj(this.allProjects[conn.index]);
 			};
 		}
 	},
 	methods: {
+		/**
+		 * A recursive function that gets all projects that the user is a member of in sets of 100
+		 *
+		 * @param {Connection} conn - the particular connection we should fetch projects from
+		 * @param {Int} page - the page (of 100s) that we should be fetching this time around
+		 */
+		fetchProjectsByPage(conn, page) {
+			axios({
+				method: 'get',
+				headers: {
+					'Private-Token': conn.token
+				},
+				url: `${conn.domain}/api/v4/projects?membership=true&per_page=100&page=${page}`
+			})
+				.then((response) => {
+					// Update our running list with these projects, but filter them first
+					for (const project of response.data) {
+						this.allProjects[conn.index].push({
+							id: project.id,
+							name: project.name,
+							defaultBranch: project.default_branch,
+							webUrl: project.web_url,
+							avatarUrl: project.avatar_url,
+							archived: project.archived,
+							group: {
+								id: project.namespace.id,
+								name: project.namespace.name,
+								webUrl: project.namespace.web_url,
+								avatarUrl: project.namespace.avatar_url
+							}
+						});
+					}
+
+					this.$set(this.allProjects, conn.index, this.allProjects[conn.index]);
+
+					// Run this again and again if we detect that there may be more projects
+					if (response.data.length === 100) {
+						this.fetchProjectsByPage(conn, page + 1);
+					}
+				})
+				.catch((e) => {
+					// Mark in our list as a sign that there was an error
+					let code = 'SERVER_ERROR';
+					if (!e.response) {
+						// Perhaps they need to be on a specific network?
+						code = 'BAD_REQUEST';
+					}
+					this.$set(this.pageErrors[conn.index], page, code);
+
+					logger.error(
+						{
+							error: e,
+							connection: conn.index,
+							page,
+							code
+						},
+						'Failed to get projects with specified connection and page'
+					);
+				});
+		},
+
 		/**
 		 * Wipes everything out that we have available directly through our props
 		 */
