@@ -18,6 +18,9 @@
 				<q-card-section class="row items-center">
 					<div class="text-h6">Filters</div>
 
+					<!-- Our toggle for showing archived projects or not -->
+					<q-toggle color="secondary" :value="showArchived" label="Show Archived" @input="toggleArchives" />
+
 					<q-space />
 
 					<!-- X icon for closing the slide-out -->
@@ -106,6 +109,16 @@ export default {
 			}
 		},
 		clearFilters: {
+			type: Function,
+			default: () => {
+				/* Nothing, I guess */
+			}
+		},
+		showArchived: {
+			type: Boolean,
+			default: false
+		},
+		toggleArchives: {
 			type: Function,
 			default: () => {
 				/* Nothing, I guess */

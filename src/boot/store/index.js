@@ -1,12 +1,10 @@
 import Vue from 'vue';
 
 import Connection from 'src/store/Connection';
-import Group from 'src/store/Group';
 import Project from 'src/store/Project';
 
 Vue.prototype.$store = {
 	Connection,
-	Group,
 	Project
 };
 

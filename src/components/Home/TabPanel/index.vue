@@ -103,11 +103,11 @@
 						<template v-slot:header>
 							<!-- Project picture -->
 							<q-item-section avatar>
-								<Avatar :entity="getProjectByIds(groupId, projectId)" />
+								<Avatar :entity="getProjectByIds(projectId)" />
 							</q-item-section>
 
 							<q-item-section class="expansion-inset__name">
-								<span>{{ getProjectByIds(groupId, projectId).name }}</span>
+								<span>{{ getProjectByIds(projectId).name }}</span>
 
 								<!-- An icon link to allow users to open this project directly -->
 								<q-btn
@@ -116,7 +116,7 @@
 									color="grey-8"
 									size="sm"
 									flat
-									:href="getProjectByIds(groupId, projectId).webUrl"
+									:href="getProjectByIds(projectId).webUrl"
 									target="_blank"
 								/>
 							</q-item-section>
@@ -188,6 +188,10 @@ export default {
 			type: Object,
 			default: () => ({})
 		},
+		groups: {
+			type: Array,
+			default: () => []
+		},
 		toggleDrawer: {
 			type: Function,
 			default: () => {
@@ -212,20 +216,6 @@ export default {
 		};
 	},
 	computed: {
-		/**
-		 * Just fetches the group objects of all the groups tied to the projects (filtered or unfiltered) that we've been given
-		 *
-		 * @returns {Array<Group>} - a list of all groups that actually contain a project in the search filters
-		 */
-		groups() {
-			const allGroups = this.$store.Group.groups(this.conn) || [];
-			const filteredGroupIds = Object.keys(this.projects);
-
-			return allGroups.filter((group) => {
-				return filteredGroupIds.includes(group.id.toString());
-			});
-		},
-
 		/**
 		 * Simply counts how many projects we have to search from (i.e. not filtered out)
 		 *
@@ -344,7 +334,7 @@ export default {
 				for (const project of this.projects[group.id]) {
 					// Add each project with results that hasn't been filtered out
 					if (this.projectsQueried[project.id] && this.projectsQueried[project.id].error) {
-						const { webUrl } = this.getProjectByIds(group.id, project.id);
+						const { webUrl } = this.getProjectByIds(project.id);
 
 						projectsWithErrors.push({
 							id: project.id,
@@ -417,7 +407,7 @@ export default {
 											this.$set(this.results[groupId], project.id, response.data);
 
 											// Append a dynamic link to this in order to be able to just open it in a new tab
-											const { webUrl } = this.getProjectByIds(groupId, project.id);
+											const { webUrl } = this.getProjectByIds(project.id);
 											for (const result of this.results[groupId][project.id]) {
 												result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
 
@@ -504,11 +494,10 @@ export default {
 		/**
 		 * A convenience for grabbing ALL data of a project
 		 *
-		 * @param {Int|String} groupId - the ID of the project's group
 		 * @param {Int|String} projectId - the ID of the project whose data you want
 		 */
-		getProjectByIds(groupId, projectId) {
-			return this.$store.Project.project(this.conn.index, groupId, projectId);
+		getProjectByIds(projectId) {
+			return this.$store.Project.project(this.conn.index, projectId);
 		},
 
 		/**
@@ -565,7 +554,7 @@ export default {
 					this.$set(this.results[groupId], projectId, [...this.results[groupId][projectId], ...moreResults.data]);
 
 					// Append a dynamic link to this in order to be able to just open it in a new tab
-					const { webUrl } = this.getProjectByIds(groupId, projectId);
+					const { webUrl } = this.getProjectByIds(projectId);
 					for (const result of this.results[groupId][projectId]) {
 						result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
 

@@ -30,7 +30,12 @@
 			<!-- The actual content under each tab -->
 			<q-tab-panels v-model="tabIndex" style="overflow: hidden;">
 				<q-tab-panel v-for="conn of connections" :key="'panel' + conn.index" :name="conn.index" class="flex flex-center tab-panel">
-					<TabPanel :conn="conn" :projects="conn.index === tabIndex ? filteredProjects : {}" :toggle-drawer="toggleDrawer" />
+					<TabPanel
+						:conn="conn"
+						:projects="conn.index === tabIndex ? filteredProjects : {}"
+						:groups="conn.index === tabIndex ? currentGroups : []"
+						:toggle-drawer="toggleDrawer"
+					/>
 				</q-tab-panel>
 			</q-tab-panels>
 		</q-card>
@@ -42,13 +47,19 @@
 			:toggle-drawer="toggleDrawer"
 			:toggle-filter="toggleFilter"
 			:clear-filters="clearAllFilters"
+			:show-archived="showArchived"
+			:toggle-archives="toggleArchives"
 		/>
+
+		<!-- A pop-up dialog we can use for telling the user what happened in event of error -->
+		<ErrorDialog :error="error" :hide="() => (error = '')" :action="reloadWindow" :action-label="'Refresh'" />
 	</q-page>
 </template>
 
 <script>
 import TabPanel from 'src/components/Home/TabPanel/index';
 import FilterDrawer from 'src/components/Home/FilterDrawer/index';
+import ErrorDialog from 'src/components/shared/ErrorDialog/index';
 
 const arrayProto = Object.prototype.toString.call([]);
 
@@ -56,7 +67,9 @@ export default {
 	name: 'Home',
 	data() {
 		return {
-			filterDrawerOpen: false
+			filterDrawerOpen: false,
+			showArchived: false,
+			error: ''
 		};
 	},
 	computed: {
@@ -98,39 +111,43 @@ export default {
 			return this.connections[this.tabIndex];
 		},
 
-		currentGroups() {
-			let groups = [];
-
-			// If we have legit connection details, go and fetch all available groups from that connection
-			if (this.currentConn && this.currentConn.index !== undefined) {
-				// To conserve on memory (in a project that fetches and displays possibly hundreds of results), we only keep here the attributes we use
-				groups = (this.$store.Group.groups(this.currentConn) || []).map((group) => {
-					return {
-						id: group.id,
-						name: group.name,
-						avatarUrl: group.avatarUrl
-					};
-				});
-			}
-
-			return groups;
-		},
-
 		currentProjects() {
-			const projects = {};
+			let projects = [];
 
-			// If we have our groups, go ahead and grab all of the projects accessible to us through those groups
-			for (const group of this.currentGroups) {
-				projects[group.id] = this.$store.Project.projects(this.currentConn, group);
+			// Grab all the projects we can
+			if (this.currentConn && this.currentConn.index !== undefined) {
+				projects = this.$store.Project.projects(this.currentConn);
 
-				if (projects[group.id]) {
-					// Conserve on memory by only keeping the stuff we need
-					projects[group.id] = projects[group.id].map((project) => {
+				// Real quick, check for errors
+				if (Object.keys(this.$store.Project.pageErrors[this.currentConn.index]).length > 0) {
+					// Looks like we ran into some kind of issue getting projects
+					const pageErrors = this.$store.Project.pageErrors[this.currentConn.index];
+					const errors = Object.values(pageErrors);
+
+					/* eslint-disable vue/no-side-effects-in-computed-properties */
+					if (errors.includes('BAD_REQUEST')) {
+						// Show them a network error message
+						this.error = `We couldn't pull the data for your projects. This usually means there's a network issue. Perhaps your internet connection is spotty or you need to be on a specific network?`;
+					} else {
+						// Show them a generic we had problems message
+						let text = `We encountered some difficulties trying to load your project info.`;
+						if (projects && projects.length > 0) {
+							text += ` Some of your projects won't show up here because we couldn't wrangle them out of Gitlab.`;
+						}
+						text += ` You can try refreshing the page if you want (that usually works).`;
+						this.error = text;
+					}
+				}
+
+				if (projects && projects.length > 0) {
+					// Once we get some projects, only keep the particular attributes we care to have in this module to conserve memory
+					return projects.map((project) => {
 						return {
 							id: project.id,
 							name: project.name,
 							avatarUrl: project.avatarUrl,
-							archived: project.archived
+							archived: project.archived,
+							groupId: project.group.id
 						};
 					});
 				}
@@ -140,41 +157,41 @@ export default {
 		},
 
 		searchableProjects() {
-			const searchables = {};
-
-			for (const groupId of Object.keys(this.currentProjects)) {
-				if (this.currentProjects[groupId] !== null) {
-					searchables[groupId] = this.currentProjects[groupId];
-				}
-
-				// Also filter out the archived projects
-				if (searchables[groupId]) {
-					searchables[groupId] = searchables[groupId].filter((project) => {
-						return !project.archived;
-					});
-				}
+			// Filter out the archived projects, if indicated
+			if (this.showArchived) {
+				return this.currentProjects;
+			} else {
+				return this.currentProjects.filter((project) => {
+					return !project.archived;
+				});
 			}
-
-			return searchables;
 		},
 
-		nonSearchableProjects() {
-			const nonSearchables = {};
+		currentGroups() {
+			const groups = [];
 
-			for (const groupId of Object.keys(this.currentProjects)) {
-				if (this.currentProjects[groupId] === null) {
-					nonSearchables[groupId] = null;
-				}
-
-				// Also include the archived projects
-				if (this.currentProjects[groupId]) {
-					nonSearchables[groupId] = this.currentProjects[groupId].filter((project) => {
-						return project.archived;
-					});
+			// Compile group details by project namespaces
+			for (const project of this.searchableProjects) {
+				if (!groups.find((group) => group.id === project.groupId)) {
+					// Add the details of this group if we haven't already
+					const fullProject = this.$store.Project.project(this.currentConn.index, project.id);
+					groups.push(fullProject.group);
 				}
 			}
 
-			return nonSearchables;
+			return groups;
+		},
+
+		groupedProjects() {
+			const grouped = {};
+
+			for (const group of this.currentGroups) {
+				grouped[group.id] = this.searchableProjects.filter((project) => {
+					return project.groupId === group.id;
+				});
+			}
+
+			return grouped;
 		},
 
 		filters() {
@@ -207,28 +224,18 @@ export default {
 		},
 
 		filteredProjects() {
-			// We don't want to keep computing all of this until we've actually tried fetching all groups
-			if (
-				this.currentGroups.length !== Object.keys(this.currentProjects).length ||
-				Object.values(this.searchableProjects).some((arr) => {
-					return arr === undefined;
-				})
-			) {
-				return {};
-			}
-
 			if (this.noFilters) {
-				return this.searchableProjects;
+				return this.groupedProjects;
 			} else {
 				const filteredProjects = {};
 
 				// Go through every project in every group to determine whether it should be included in the searches
-				Object.keys(this.searchableProjects).forEach((groupId) => {
+				Object.keys(this.groupedProjects).forEach((groupId) => {
 					// Skip the wait if this whole group has been requested
 					if (this.filters.groups && this.filters.groups.includes(+groupId)) {
-						filteredProjects[groupId] = [...this.searchableProjects[groupId]];
+						filteredProjects[groupId] = [...this.groupedProjects[groupId]];
 					} else if (this.filters.projects) {
-						const eligibleProjects = this.searchableProjects[groupId].filter((project) => {
+						const eligibleProjects = this.groupedProjects[groupId].filter((project) => {
 							// Include this if it has been named specifically in the filters
 							if (this.filters.projects.includes(project.id)) {
 								return true;
@@ -252,16 +259,6 @@ export default {
 		drawerFilters() {
 			const drawerFilters = [];
 
-			// We don't want to keep computing all of this until we've actually tried fetching all groups
-			if (
-				this.currentGroups.length !== Object.keys(this.currentProjects).length ||
-				Object.values(this.searchableProjects).some((arr) => {
-					return arr === undefined;
-				})
-			) {
-				return drawerFilters;
-			}
-
 			// Grab all categories as filter options
 			for (const group of this.currentGroups) {
 				const entry = {
@@ -271,7 +268,7 @@ export default {
 				};
 
 				// Don't forget to include all of this group's projects - IF they have them!
-				const groupProjects = this.searchableProjects[group.id];
+				const groupProjects = this.groupedProjects[group.id];
 
 				if (!groupProjects || groupProjects.length < 1) {
 					// Uhh...nope. Not gonna deal with you.
@@ -373,8 +370,14 @@ export default {
 				}
 			});
 		},
+		toggleArchives(showArchived) {
+			this.showArchived = showArchived;
+		},
 		navigateToDomain(domain) {
 			this.$router.replace({ path: `/${domain}` });
+		},
+		reloadWindow() {
+			window.location.reload(true);
 		}
 	},
 	watch: {
@@ -389,7 +392,8 @@ export default {
 	},
 	components: {
 		TabPanel,
-		FilterDrawer
+		FilterDrawer,
+		ErrorDialog
 	},
 
 	/**
