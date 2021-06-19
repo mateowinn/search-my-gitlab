@@ -43,13 +43,13 @@
 
 				<q-item>
 					<q-item-section>
-						<a href="https://owalalife.com/" target="_blank">Hydrate</a>
+						<router-link :to="{ path: '/terms' }">Terms & Conditions</router-link>
 					</q-item-section>
 				</q-item>
 
 				<q-item>
 					<q-item-section>
-						<a href="#" @click.prevent.stop="updateModal('jobs')">Jobs</a>
+						<router-link :to="{ path: '/privacy' }">Privacy Policy</router-link>
 					</q-item-section>
 				</q-item>
 			</q-list>
@@ -71,10 +71,21 @@
 
 				<q-item>
 					<q-item-section>
+						<a href="https://owalalife.com/" target="_blank">Hydrate</a>
+					</q-item-section>
+				</q-item>
+
+				<q-item>
+					<q-item-section>
 						<a href="https://www.betterbits.io" target="_blank">Better Bits</a>
 					</q-item-section>
 				</q-item>
 			</q-list>
+		</div>
+
+		<div class="footer__copyright">
+			<span>Copyright © {{ new Date().getFullYear() }} Matthew Winn</span> |
+			<a href="https://gitlab.com/mateowinn/search-my-gitlab/-/blob/master/LICENSE.md" target="_blank">License</a>
 		</div>
 	</q-footer>
 </template>
@@ -158,6 +169,12 @@ export default {
 			color: white;
 			text-decoration: none;
 		}
+	}
+
+	&__copyright {
+		margin: auto;
+		text-align: center;
+		padding: 10px;
 	}
 }
 </style>

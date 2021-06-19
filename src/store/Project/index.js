@@ -74,13 +74,13 @@ const Project = new Vue({
 							name: project.name,
 							defaultBranch: project.default_branch,
 							webUrl: project.web_url,
-							avatarUrl: project.avatar_url,
+							avatarUrl: this.getFullAvatarUrl(project.avatar_url, conn),
 							archived: project.archived,
 							group: {
 								id: project.namespace.id,
 								name: project.namespace.name,
 								webUrl: project.namespace.web_url,
-								avatarUrl: project.namespace.avatar_url
+								avatarUrl: this.getFullAvatarUrl(project.namespace.avatar_url, conn)
 							}
 						});
 					}
@@ -111,6 +111,23 @@ const Project = new Vue({
 						'Failed to get projects with specified connection and page'
 					);
 				});
+		},
+
+		/**
+		 * Sometimes Avatar URLs are absolute and sometimes they are relative. This is to make sure we equalize that.
+		 *
+		 * @param {String} avatarUrl - the URL string received from Gitlab for the entity Avatar
+		 * @param {Object} conn - the object with details of the chosen connection
+		 * @returns {String} - domain-prepended or original Avatar string
+		 */
+		getFullAvatarUrl(avatarUrl, conn) {
+			if (avatarUrl && avatarUrl.startsWith('http')) {
+				return avatarUrl;
+			} else if (avatarUrl && avatarUrl.startsWith('/')) {
+				return conn.domain + avatarUrl;
+			} else {
+				return avatarUrl;
+			}
 		},
 
 		/**

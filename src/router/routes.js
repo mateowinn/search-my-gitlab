@@ -1,9 +1,24 @@
 const routes = [
-	// About page. It's at the top because the Home page uses dynamic path parameters.
+	// These are at the top because the Home page uses dynamic path parameters.
+	// About page
 	{
 		path: '/about',
 		component: () => import('layouts/MainLayout.vue'),
 		children: [{ path: '', component: () => import('src/pages/About/index.vue') }]
+	},
+
+	// Privacy Policy page
+	{
+		path: '/privacy',
+		component: () => import('layouts/MainLayout.vue'),
+		children: [{ path: '', component: () => import('src/pages/Privacy/index.vue') }]
+	},
+
+	// Terms & Conditions page
+	{
+		path: '/terms',
+		component: () => import('layouts/MainLayout.vue'),
+		children: [{ path: '', component: () => import('src/pages/Terms/index.vue') }]
 	},
 
 	// The main route for searching and adding connections
