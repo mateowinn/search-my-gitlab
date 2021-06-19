@@ -52,6 +52,8 @@
 			</q-card>
 		</q-dialog>
 
+		<!-- TODO: add a warning card here about how tokens are creds and we don't store them on our server -->
+
 		<!-- Our actual form for accepting URL and token -->
 		<q-form @submit="onSubmit" :autofocus="!hasNone" class="q-gutter-md q-pa-md text-center">
 			<!-- Gitlab URL input -->
@@ -90,6 +92,7 @@
 				</template>
 			</q-input>
 
+			<!-- TODO: Add the links to the actual terms page -->
 			<!-- My protection against lawsuits. Phew! -->
 			<q-toggle v-model="accept" label="I accept the license and terms" />
 
