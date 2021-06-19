@@ -7,7 +7,9 @@
 			<p>
 				Saving time and money, of course. Gitlab's freakin' awesome, but it sucks that I either have to (1) pay through the nose or (2) waste
 				an insane amount of time <i>just</i> to be able to search through all of my repos.
-				<a href="https://www.youtube.com/watch?v=waEC-8GFTP4" target="_blank">Ain't nobody got time for that.</a>
+				<a href="https://www.youtube.com/watch?v=waEC-8GFTP4" target="_blank" rel="nofollow noopener noreferrer"
+					>Ain't nobody got time for that.</a
+				>
 			</p>
 
 			<h2 class="text-h4 text-primary text-bold">

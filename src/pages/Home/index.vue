@@ -298,7 +298,7 @@ export default {
 			}
 
 			// Alphabetize the filters
-			drawerFilters.sort(function (a, b) {
+			drawerFilters.sort(function(a, b) {
 				const groupA = a.label.toUpperCase();
 				const groupB = b.label.toUpperCase();
 				return groupA < groupB ? -1 : groupA > groupB ? 1 : 0;
@@ -377,7 +377,9 @@ export default {
 			window.localStorage.setItem('showArchived', showArchived);
 		},
 		navigateToDomain(domain) {
-			this.$router.replace({ path: `/${domain}` });
+			if (domain !== this.$route.params.domain) {
+				this.$router.replace({ path: `/${domain}` });
+			}
 		},
 		reloadWindow() {
 			window.location.reload(true);

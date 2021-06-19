@@ -34,7 +34,7 @@
 				Changes and/or Termination
 			</h2>
 			<p>
-				We hope it would never happen but we reserve the right to terminate, suspend or discontinue any aspect of
+				We hope it would never happen, but we reserve the right to terminate, suspend or discontinue any aspect of
 				<strong class="text-secondary">Search My Gitlab</strong>'s services at any time. We also reserve the right to make changes to the
 				services or materials on <strong class="text-secondary">Search My Gitlab</strong> at any time without notice.
 			</p>
@@ -55,7 +55,7 @@
 				For any questions or concerns regarding <strong class="text-secondary">Search My Gitlab</strong> and/or its terms of service please
 				submit an issue at
 				<a target="_blank" href="https://gitlab.com/mateowinn/search-my-gitlab">https://gitlab.com/mateowinn/search-my-gitlab</a> or send us
-				an email at <a href="mailto:matt.winn@betterbits.io">matt.winn@betterbits.io</a>
+				an email at <a href="mailto:matt.winn@betterbits.io" rel="nofollow noopener noreferrer">matt.winn@betterbits.io</a>
 			</p>
 		</div>
 	</q-page>
