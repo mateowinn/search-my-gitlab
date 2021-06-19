@@ -30,6 +30,13 @@
 					...yeah. You know what to do.
 				</h1>
 			</template>
+
+			<div class="doc-note doc-note--warning q-mt-xl">
+				<span
+					><strong>Warning:</strong> Access tokens are credentials, which can grant access to resources. Be careful where you paste them! We
+					do not record tokens; all validation and searching is done between the client and your own Gitlab host.</span
+				>
+			</div>
 		</div>
 
 		<!-- A pop-up dialog we can use for telling the user what happened in event of error -->
@@ -63,15 +70,15 @@
 				hint="E.g. https://gitlab.com"
 				lazy-rules
 				:rules="[
-					(val) => (val && val.length > 0) || 'Please provide a URL string to your Gitlab instance',
-					(val) => val.includes('http') || 'It must be a fully-qualified URL'
+					(val) => (val && val.length > 0) || 'Please provide a URL string to your Gitlab host',
+					(val) => val.includes('http') || 'It must be a fully-qualified URL, e.g. https://gitlab.com'
 				]"
 			/>
 
 			<!-- Token input -->
 			<q-input
 				filled
-				type="text"
+				type="password"
 				v-model="token"
 				label="Your Gitlab Access Token"
 				lazy-rules="ondemand"
@@ -91,7 +98,13 @@
 			</q-input>
 
 			<!-- My protection against lawsuits. Phew! -->
-			<q-toggle v-model="accept" label="I accept the license and terms" />
+			<div style="line-height: 0.6;">
+				<q-toggle v-model="accept" />
+				<span style="vertical-align: middle;"
+					>I accept the the <a href="/terms" target="_blank">terms and conditions</a> and authorize
+					<strong class="text-secondary">Search My Gitlab</strong> to search Gitlab on my behalf.</span
+				>
+			</div>
 
 			<!-- Uh, the submit button. Yep. That's it. -->
 			<div>
@@ -189,3 +202,13 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.doc-note {
+	padding: 10px;
+
+	&--warning {
+		background-color: $yellow-2;
+	}
+}
+</style>

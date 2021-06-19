@@ -1,6 +1,6 @@
 <template>
 	<q-page>
-		<q-card square style="min-height: inherit; padding-bottom: 20px;">
+		<q-card square style="min-height: inherit; padding-bottom: 20px">
 			<!-- Tab dividers -->
 			<q-tabs
 				:value="tabIndex"
@@ -28,7 +28,7 @@
 			</q-tabs>
 
 			<!-- The actual content under each tab -->
-			<q-tab-panels v-model="tabIndex" style="overflow: hidden;">
+			<q-tab-panels v-model="tabIndex" style="overflow: hidden">
 				<q-tab-panel v-for="conn of connections" :key="'panel' + conn.index" :name="conn.index" class="flex flex-center tab-panel">
 					<TabPanel
 						:conn="conn"
@@ -68,7 +68,7 @@ export default {
 	data() {
 		return {
 			filterDrawerOpen: false,
-			showArchived: false,
+			showArchived: window.localStorage.getItem('showArchived') === 'true',
 			error: ''
 		};
 	},
@@ -372,9 +372,14 @@ export default {
 		},
 		toggleArchives(showArchived) {
 			this.showArchived = showArchived;
+
+			// Also save this to local storage so that it persists when the user returns to the site
+			window.localStorage.setItem('showArchived', showArchived);
 		},
 		navigateToDomain(domain) {
-			this.$router.replace({ path: `/${domain}` });
+			if (domain !== this.$route.params.domain) {
+				this.$router.replace({ path: `/${domain}` });
+			}
 		},
 		reloadWindow() {
 			window.location.reload(true);

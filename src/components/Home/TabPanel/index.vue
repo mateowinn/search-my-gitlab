@@ -45,7 +45,7 @@
 			<!-- A list of projects we couldn't get results from in form of a link to the project -->
 			<q-card-section class="q-py-xs">
 				<template v-for="(error, index) of errorsToShow">
-					<a :href="error.url" target="_blank" :key="`search-error-${error.id}`">{{ error.name }}</a
+					<a :href="error.url" target="_blank" :key="`search-error-${error.id}`" rel="nofollow noopener noreferrer">{{ error.name }}</a
 					>{{ errorsToShow.length - 1 > index ? ', ' : '' }}
 				</template>
 			</q-card-section>

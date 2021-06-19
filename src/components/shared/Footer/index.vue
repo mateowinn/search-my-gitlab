@@ -31,7 +31,7 @@
 
 				<q-item>
 					<q-item-section>
-						<a href="https://github.com/mateowinn/search-my-gitlab" target="_blank">Contribute</a>
+						<a href="https://gitlab.com/mateowinn/search-my-gitlab" target="_blank">Contribute</a>
 					</q-item-section>
 				</q-item>
 
@@ -43,13 +43,13 @@
 
 				<q-item>
 					<q-item-section>
-						<a href="https://owalalife.com/" target="_blank">Hydrate</a>
+						<router-link :to="{ path: '/terms' }">Terms & Conditions</router-link>
 					</q-item-section>
 				</q-item>
 
 				<q-item>
 					<q-item-section>
-						<a href="#" @click.prevent.stop="updateModal('jobs')">Jobs</a>
+						<router-link :to="{ path: '/privacy' }">Privacy Policy</router-link>
 					</q-item-section>
 				</q-item>
 			</q-list>
@@ -65,7 +65,13 @@
 
 				<q-item>
 					<q-item-section>
-						<a href="https://github.com/mateowinn" target="_blank">Contact</a>
+						<a href="https://gitlab.com/mateowinn" target="_blank">Contact</a>
+					</q-item-section>
+				</q-item>
+
+				<q-item>
+					<q-item-section>
+						<a href="https://owalalife.com/" target="_blank">Hydrate</a>
 					</q-item-section>
 				</q-item>
 
@@ -75,6 +81,14 @@
 					</q-item-section>
 				</q-item>
 			</q-list>
+		</div>
+
+		<div class="footer__copyright">
+			<span>GitLab and its logo are trademarks of GitLab, Inc</span>
+			<br />
+
+			<span>Copyright © {{ new Date().getFullYear() }} Matthew Winn</span> |
+			<a href="https://gitlab.com/mateowinn/search-my-gitlab/-/blob/master/LICENSE.md" target="_blank" style="color: white;">License</a>
 		</div>
 	</q-footer>
 </template>
@@ -103,11 +117,6 @@ export default {
 					this.modalHeader = 'Huh.';
 					this.modalText = "It appears that whoever put this link here didn't bother to actually make a blog.";
 					this.modalButton = 'Okay...';
-					break;
-				case 'jobs':
-					this.modalHeader = 'For real?';
-					this.modalText = "I suppose that if you <i>really</i> wanna work, you're welcome to contribute to the website. For free.";
-					this.modalButton = `<a href="https://github.com/mateowinn/search-my-gitlab" target="_blank">Yes, Contribute!</a>`;
 					break;
 			}
 
@@ -158,6 +167,12 @@ export default {
 			color: white;
 			text-decoration: none;
 		}
+	}
+
+	&__copyright {
+		margin: auto;
+		text-align: center;
+		padding: 10px;
 	}
 }
 </style>
