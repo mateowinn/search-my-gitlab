@@ -1,7 +1,10 @@
 import Vue from 'vue';
-import axios from 'axios';
 import logger from 'utilities/logger';
 import cloneObj from 'utilities/cloneObj';
+import ApolloClients from '../Client';
+
+// Our query definitions
+import GET_PROJECTS_BY_PAGE from 'queries/getProjectsByPage.gql';
 
 // Our Project data definitions
 const projectData = {
@@ -43,7 +46,7 @@ const Project = new Vue({
 					this.$set(this.pageErrors, conn.index, {});
 
 					// Recursively fetch all projects
-					this.fetchProjectsByPage(conn, 1);
+					this.fetchProjectsByPage(conn);
 				}
 
 				// Return whatever we have right now
@@ -58,38 +61,52 @@ const Project = new Vue({
 		 * @param {Connection} conn - the particular connection we should fetch projects from
 		 * @param {Int} page - the page (of 100s) that we should be fetching this time around
 		 */
-		fetchProjectsByPage(conn, page) {
-			axios({
-				method: 'get',
-				headers: {
-					'Private-Token': conn.token
-				},
-				url: `${conn.domain}/api/v4/projects?membership=true&per_page=100&page=${page}`
-			})
+		fetchProjectsByPage(conn, lastCursor) {
+			const apolloClient = ApolloClients.client(conn);
+
+			apolloClient
+				.query({
+					query: GET_PROJECTS_BY_PAGE,
+					variables: {
+						membership: true,
+						first: 100,
+						after: lastCursor
+					}
+				})
 				.then((response) => {
 					// Update our running list with these projects, but filter them first
-					for (const project of response.data) {
+					for (const project of response.data.projects.nodes) {
+						// We need to figure out if we actually got a group or if we only have a namespace (which will have to be our substitute)
+						const group = {};
+						if (project.group && project.group.id) {
+							group.id = +project.group.id.split('gid://gitlab/Group/')[1];
+							group.name = project.group.name;
+							group.webUrl = project.group.webUrl;
+							group.avatarUrl = this.getFullAvatarUrl(project.group.avatarUrl, conn);
+						} else if (project.namespace && project.namespace.id) {
+							group.id = +project.namespace.id.split('gid://gitlab/Namespace/')[1];
+							group.name = project.namespace.name;
+							group.webUrl = `${conn.domain}/${project.namespace.fullPath}`;
+							group.avatarUrl = null;
+						}
+
+						// Add the filtered projection to our list
 						this.allProjects[conn.index].push({
-							id: project.id,
+							id: +project.id.split('gid://gitlab/Project/')[1],
 							name: project.name,
-							defaultBranch: project.default_branch,
-							webUrl: project.web_url,
-							avatarUrl: this.getFullAvatarUrl(project.avatar_url, conn),
+							defaultBranch: project.repository.rootRef,
+							webUrl: project.webUrl,
+							avatarUrl: this.getFullAvatarUrl(project.avatarUrl, conn),
 							archived: project.archived,
-							group: {
-								id: project.namespace.id,
-								name: project.namespace.name,
-								webUrl: project.namespace.web_url,
-								avatarUrl: this.getFullAvatarUrl(project.namespace.avatar_url, conn)
-							}
+							group
 						});
 					}
 
 					this.$set(this.allProjects, conn.index, this.allProjects[conn.index]);
 
 					// Run this again and again if we detect that there may be more projects
-					if (response.data.length === 100) {
-						this.fetchProjectsByPage(conn, page + 1);
+					if (response.data.projects.pageInfo.hasNextPage) {
+						this.fetchProjectsByPage(conn, response.data.projects.pageInfo.endCursor);
 					}
 				})
 				.catch((e) => {
@@ -99,16 +116,16 @@ const Project = new Vue({
 						// Perhaps they need to be on a specific network?
 						code = 'BAD_REQUEST';
 					}
-					this.$set(this.pageErrors[conn.index], page, code);
+					this.$set(this.pageErrors[conn.index], lastCursor, code);
 
 					logger.error(
 						{
 							error: e,
 							connection: conn.index,
-							page,
+							lastCursor,
 							code
 						},
-						'Failed to get projects with specified connection and page'
+						'Failed to get projects with specified connection and cursor location'
 					);
 				});
 		},

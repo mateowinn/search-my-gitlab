@@ -62,11 +62,20 @@ module.exports = function(/* ctx */) {
 
 			// https://v1.quasar.dev/quasar-cli/handling-webpack
 			extendWebpack(cfg) {
+				// We need this so webpack knows what to do with our .gql files
+				// https://www.npmjs.com/package/graphql-tag
+				cfg.module.rules.push({
+					test: /\.(graphql|gql)$/,
+					exclude: /node_modules/,
+					loader: 'graphql-tag/loader'
+				});
+
 				// Add our own alias in addition to the Quasar defaults
 				cfg.resolve.alias = {
 					...cfg.resolve.alias,
 					store: path.resolve(__dirname, './src/store'),
-					utilities: path.resolve(__dirname, './src/utilities')
+					utilities: path.resolve(__dirname, './src/utilities'),
+					queries: path.resolve(__dirname, './src/graphql/queries')
 				};
 			},
 
