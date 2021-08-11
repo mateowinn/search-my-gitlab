@@ -10,7 +10,7 @@
 		"lint": "eslint --ext .js,.vue ./ --color",
 		"precommit-msg": "echo 'Pre-commit checks...' && exit 0",
 		"start": "quasar dev -m pwa",
-		"test": "jest",
+		"test": "echo 'No tests yet!' && exit 0",
 		"test:silent": "jest --silent"
 	},
 	"dependencies": {
