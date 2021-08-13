@@ -34,8 +34,6 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 
 ### Priorities
 
--   Add option to remove specific search results from the list
--   Convert search to GraphQL (more data-efficient)
 -   Make URL path for domains more specific
 -   Make tabs more distinct
 -   Add ability to specify branches to search

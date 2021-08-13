@@ -1,6 +1,9 @@
 <template>
+	<!-- If the user has marked this result for hiding, then we show this Undo invitation message for 5 seconds before deleting -->
+	<RestoreCard v-if="result.hidden" type="entry" :restore-fn="restoreResult.bind(null, groupId, result.project_id, resultIndex)" />
+
 	<!-- We display each search results in a stylish card-like element -->
-	<q-card class="q-ma-sm" bordered>
+	<q-card v-else class="q-ma-sm" bordered>
 		<!-- If the user clicks on the header of the card, they can expand/collapse the card's contents -->
 		<q-card-actions class="q-pa-sm cursor-pointer" style="overflow: auto; white-space: nowrap;" @click.prevent="expanded = !expanded">
 			<div class="text-subtitle1 text-weight-bold">
@@ -22,6 +25,20 @@
 
 			<q-space />
 
+			<!-- Allows the user to hide/remove this result from the list -->
+			<q-btn
+				icon="delete"
+				color="grey-7"
+				size="sm"
+				flat
+				style="vertical-align: middle;"
+				@click.stop.prevent="hideResult(groupId, result.project_id, resultIndex)"
+			>
+				<q-tooltip>
+					Remove from search results
+				</q-tooltip>
+			</q-btn>
+
 			<!-- An icon that simply makes it clear that the card is expandable/collapsible -->
 			<q-icon color="grey-7" size="sm" :name="expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'" />
 		</q-card-actions>
@@ -34,7 +51,7 @@
 					<q-card-section class="q-pa-none">
 						<a
 							v-for="(piece, index) of highlightedPieces"
-							:key="`result-${result.project_id}-${resultIndex}-line-${index}`"
+							:key="`result-${result.project_id}-${result.index}-line-${index}`"
 							:href="`${result.url}#L${result.startline + index}`"
 							target="_blank"
 							class="code-line code-line__number"
@@ -55,7 +72,7 @@
 						<!-- Additional classes are added to the lines that we detect actually contain the search query -->
 						<pre
 							v-for="(piece, index) of highlightedPieces"
-							:key="`result-${result.project_id}-${resultIndex}-text-${index}`"
+							:key="`result-${result.project_id}-${result.index}-text-${index}`"
 							class="q-mb-none q-pa-xs q-px-sm code-line"
 							:class="{
 								'bg-grey-9': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
@@ -71,6 +88,7 @@
 
 <script>
 import highlightCode from 'src/syntax/highlightCode';
+import RestoreCard from 'components/shared/RestoreCard/index';
 
 export default {
 	name: 'SearchResult',
@@ -90,6 +108,22 @@ export default {
 		expandAll: {
 			type: Boolean,
 			default: true
+		},
+		groupId: {
+			type: String,
+			default: ''
+		},
+		hideResult: {
+			type: Function,
+			default: () => {
+				// Uhh...nothing, really
+			}
+		},
+		restoreResult: {
+			type: Function,
+			default: () => {
+				// Uhh...nothing, really
+			}
 		}
 	},
 	data() {
@@ -140,6 +174,9 @@ export default {
 				this.expanded = newVal;
 			}
 		}
+	},
+	components: {
+		RestoreCard
 	}
 };
 </script>
