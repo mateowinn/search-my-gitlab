@@ -175,7 +175,6 @@ export default {
 				if (!groups.find((group) => group.id === project.groupId)) {
 					// Add the details of this group if we haven't already
 					const fullProject = this.$store.Project.project(this.currentConn.index, project.id);
-					console.log('full project', fullProject);
 					groups.push(fullProject.group);
 				}
 			}
