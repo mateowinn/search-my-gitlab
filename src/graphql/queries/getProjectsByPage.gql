@@ -1,0 +1,29 @@
+query getProjectsByPage($membership: Boolean!, $first: Int, $after: String) {
+	projects(membership: $membership, first: $first, after: $after) {
+		nodes {
+			id
+			name
+			webUrl
+			avatarUrl
+			archived
+			repository {
+				rootRef
+			}
+			group {
+				id
+				name
+				webUrl
+				avatarUrl
+			}
+			namespace {
+				id
+				name
+				fullPath
+			}
+		}
+		pageInfo {
+			endCursor
+			hasNextPage
+		}
+	}
+}

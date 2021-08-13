@@ -29,3 +29,17 @@ quasar build
 ### Customize the configuration
 
 See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js).
+
+## TODOs
+
+### Priorities
+
+-   Make URL path for domains more specific
+-   Make tabs more distinct
+-   Add ability to specify branches to search
+-   Add feature to search out differences between branches in repositories
+
+### Nice-to-Haves
+
+-   Extend syntax highlighting to more languages
+-   Make color schemes selectable
