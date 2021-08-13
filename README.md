@@ -35,6 +35,7 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 ### Priorities
 
 -   Make URL path for domains more specific
+-   Add Google Analytics
 -   Make tabs more distinct
 -   Add ability to specify branches to search
 -   Add feature to search out differences between branches in repositories
