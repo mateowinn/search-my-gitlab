@@ -25,9 +25,9 @@ export default {
 	getCid() {
 		// We need an unique identifier for this session
 		// We store it in a localStorage, but you may use cookies, too
-		if (!localStorage.cid) {
-			localStorage.cid = uid();
+		if (!window.localStorage.getItem('cid')) {
+			window.localStorage.setItem('cid', uid());
 		}
-		return localStorage.cid;
+		return window.localStorage.getItem('cid');
 	}
 };
