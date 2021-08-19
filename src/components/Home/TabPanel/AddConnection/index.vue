@@ -188,8 +188,7 @@ export default {
 		 */
 		migrate() {
 			const newRoute = {
-				...this.$route,
-				path: `/${this.newIndex}`
+				path: `/search/${this.domain.split('//')[1]}`
 			};
 
 			this.$router.replace(newRoute);

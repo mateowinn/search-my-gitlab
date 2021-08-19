@@ -1,5 +1,5 @@
 /**
- * A function to return a logger instance that controls which logs actually get output to console depending on what domain we're on.
+ * A function to return a logger instance that controls which logs actually get output to console depending on what environment we're in.
  * @returns Logger
  */
 function createLogger() {

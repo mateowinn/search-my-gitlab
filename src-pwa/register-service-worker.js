@@ -41,7 +41,10 @@ register(process.env.SERVICE_WORKER_FILE, {
 					label: 'Refresh',
 					color: 'white',
 					handler: () => {
-						window.location.reload();
+						// Unfortunately, location.reload() does not seem to work for Chrome, but this is reported to work
+						// eslint-disable-next-line
+						window.location.href = window.location.href;
+						// window.location.reload();
 					}
 				}
 			]

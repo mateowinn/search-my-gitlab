@@ -19,25 +19,31 @@
 				<!-- One tab for each connection, plus the option to add. If an `icon` is present, then we know it's the add tab. -->
 				<q-tab
 					v-for="conn of connections"
-					:key="'tab' + conn.index"
+					:key="'tab-' + conn.index"
 					:name="conn.index"
 					:icon="conn.icon"
 					:label="conn.domain && conn.domain.split('//')[1]"
-					class="shadow-3"
+					class="shadow-1"
 				/>
 			</q-tabs>
 
 			<!-- The actual content under each tab -->
 			<q-tab-panels v-model="tabIndex" style="overflow: hidden">
-				<q-tab-panel v-for="conn of connections" :key="'panel' + conn.index" :name="conn.index" class="flex flex-center tab-panel">
+				<q-tab-panel v-for="conn of connections" :key="'panel-' + conn.index" :name="conn.index" class="flex flex-center tab-panel">
 					<TabPanel
 						:conn="conn"
 						:projects="conn.index === tabIndex ? filteredProjects : {}"
-						:groups="conn.index === tabIndex ? currentGroups : []"
+						:groups="conn.index === tabIndex ? filteredGroups : []"
 						:toggle-drawer="toggleDrawer"
 					/>
 				</q-tab-panel>
 			</q-tab-panels>
+
+			<!-- Loading animation for while we're still loading project info -->
+			<q-inner-loading :showing="loadingProjects">
+				<q-spinner-gears size="65px" color="primary" />
+				<div>Loading Project Metadata...</div>
+			</q-inner-loading>
 		</q-card>
 
 		<!-- The drawer with its filters -->
@@ -69,7 +75,8 @@ export default {
 		return {
 			filterDrawerOpen: false,
 			showArchived: window.localStorage.getItem('showArchived') === 'true',
-			error: ''
+			error: '',
+			loadingProjects: false
 		};
 	},
 	computed: {
@@ -80,10 +87,12 @@ export default {
 		 */
 		tabIndex() {
 			const domain = this.$route.params.domain;
+			const conn = this.connections.find((c) => c.domain && c.domain.includes(domain));
 
-			if (+domain === +domain) {
-				return +domain;
+			if (conn) {
+				return this.connections.indexOf(conn);
 			} else {
+				// Should really only be "add"
 				return domain;
 			}
 		},
@@ -256,6 +265,23 @@ export default {
 			}
 		},
 
+		filteredGroups() {
+			if (this.noFilters) {
+				return this.currentGroups;
+			} else {
+				const filteredGroups = [];
+
+				// To keep this list and the projects list in sync, we just base this on the filtered projects
+				for (const group of this.currentGroups) {
+					if (this.filteredProjects[group.id] !== undefined) {
+						filteredGroups.push(group);
+					}
+				}
+
+				return filteredGroups;
+			}
+		},
+
 		drawerFilters() {
 			const drawerFilters = [];
 
@@ -376,13 +402,21 @@ export default {
 			// Also save this to local storage so that it persists when the user returns to the site
 			window.localStorage.setItem('showArchived', showArchived);
 		},
-		navigateToDomain(domain) {
+		navigateToDomain(domainIdx) {
+			let domain = domainIdx;
+			const conn = this.connections[domainIdx];
+
+			// Most of the time, this should be the index of one of our existing connections' domain strings
+			if (conn && conn.domain.includes('//')) {
+				domain = conn.domain.split('//')[1];
+			}
+
 			if (domain !== this.$route.params.domain) {
-				this.$router.replace({ path: `/${domain}` });
+				this.$router.replace({ path: `/search/${domain}` });
 			}
 		},
 		reloadWindow() {
-			window.location.reload(true);
+			window.location.reload();
 		}
 	},
 	watch: {
@@ -392,6 +426,20 @@ export default {
 		'$route.params.domain': {
 			handler(newDomain) {
 				this.navigateToDomain(newDomain);
+			}
+		},
+
+		/**
+		 * Allows us to track when we're in the middle of loading project metadata so that we can show an animation
+		 */
+		currentProjects: {
+			handler(currentVal) {
+				if ((!currentVal || currentVal.length === 0) && this.tabIndex !== 'add' && !this.error) {
+					// Looks like we're still loading
+					this.loadingProjects = true;
+				} else {
+					this.loadingProjects = false;
+				}
 			}
 		}
 	},
@@ -406,10 +454,10 @@ export default {
 	 */
 	created() {
 		// Do we already have a domain specified to show?
-		const domainPath = this.$route.params.domain;
-		const isNum = +domainPath === +domainPath;
+		const isNum = +this.tabIndex === +this.tabIndex;
 
-		if ((!isNum && domainPath !== 'add') || (isNum && this.connections.length < 2) || (isNum && !this.connections[domainPath])) {
+		// if ((!isNum && this.tabIndex !== 'add') || (isNum && this.connections.length < 2)) {
+		if (!isNum && this.tabIndex !== 'add') {
 			// Looks like we don't, so, let's set one!
 			if (this.connections.length > 1) {
 				// The user already has connection info setup but didn't specify which one to look at yet
@@ -424,6 +472,18 @@ export default {
 </script>
 
 <style lang="scss">
+.q-tab {
+	border-right: 1px rgba(0, 0, 0, 0.28) solid;
+
+	&.q-tab--active,
+	&:last-child {
+		border-top-right-radius: 5px;
+	}
+	&.q-tab--active:not(:first-child) {
+		border-top-left-radius: 5px;
+	}
+}
+
 .tab-panel {
 	overflow: hidden;
 	padding: 16px 0;

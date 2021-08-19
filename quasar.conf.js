@@ -43,6 +43,7 @@ module.exports = function(/* ctx */) {
 		// Full list of options: https://v1.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
 		build: {
 			vueRouterMode: 'history', // available values: 'hash', 'history'
+			publicPath: '/',
 
 			// transpile: false,
 
@@ -77,6 +78,9 @@ module.exports = function(/* ctx */) {
 					utilities: path.resolve(__dirname, './src/utilities'),
 					queries: path.resolve(__dirname, './src/graphql/queries')
 				};
+
+				cfg.output = cfg.output || {};
+				cfg.output.publicPath = '/';
 			},
 
 			// "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
@@ -94,13 +98,13 @@ module.exports = function(/* ctx */) {
 		devServer: {
 			https: true,
 			host: 'www.localtest.me',
-			port: 8080,
-			historyApiFallback: true,
-			open: true, // opens browser window automatically
-			headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-				'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+			port: 3000,
+			publicPath: '/',
+			// Stupid webpack dev server. It took me forever to figure how to get nested paths with periods in them to work...
+			historyApiFallback: {
+				disableDotRule: true,
+				index: '/index.html',
+				rewrites: [{ from: /\./, to: '/' }]
 			},
 			before: (app) => {
 				app.set('etag', 'strong');
@@ -108,7 +112,8 @@ module.exports = function(/* ctx */) {
 					res.set('Cache-Control', 'no-cache');
 					next();
 				});
-			}
+			},
+			open: true // opens browser window automatically
 		},
 
 		// https://v1.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework

@@ -66,7 +66,7 @@
 			<a href="#" @click.prevent.stop="expandAll = !expandAll">{{ expandAll ? 'Collapse All' : 'Expand All' }}</a>
 		</div>
 
-		<!-- Loading bar and messages -->
+		<!-- Loading bar and messages for *searches* -->
 		<template v-if="loading">
 			<q-linear-progress :value="loadingPerc" class="search-loader" />
 			<div class="text-h6 text-center">{{ loadingText }}</div>
@@ -449,7 +449,12 @@ export default {
 		 */
 		async executeSearch(projectsToSearch) {
 			// We only want to actually execute the query if we're looking at the right tab and we have a real search
-			if (this.$route.query.search && +this.$route.params.domain === this.conn.index && Object.keys(projectsToSearch).length > 0) {
+			if (
+				this.$route.query.search &&
+				this.conn.domain &&
+				this.conn.domain.includes(this.$route.params.domain) &&
+				Object.keys(projectsToSearch).length > 0
+			) {
 				this.queryTime = 0;
 				this.loading = true; // Show the loading animation
 
