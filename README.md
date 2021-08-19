@@ -39,8 +39,10 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 -   Make tabs more distinct
 -   Add ability to specify branches to search
 -   Add feature to search out differences between branches in repositories
+-   Sync credentials between clients through login?
 
 ### Nice-to-Haves
 
 -   Extend syntax highlighting to more languages
 -   Make color schemes selectable
+-   Allow domain tabs to be configurable in their order

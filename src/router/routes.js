@@ -4,31 +4,37 @@ const routes = [
 	{
 		path: '/about',
 		component: () => import('layouts/MainLayout.vue'),
-		children: [{ path: '', component: () => import('src/pages/About/index.vue') }]
+		children: [{ name: 'About', path: '', component: () => import('src/pages/About/index.vue') }]
 	},
 
 	// Privacy Policy page
 	{
 		path: '/privacy',
 		component: () => import('layouts/MainLayout.vue'),
-		children: [{ path: '', component: () => import('src/pages/Privacy/index.vue') }]
+		children: [{ name: 'Privacy', path: '', component: () => import('src/pages/Privacy/index.vue') }]
 	},
 
 	// Terms & Conditions page
 	{
 		path: '/terms',
 		component: () => import('layouts/MainLayout.vue'),
-		children: [{ path: '', component: () => import('src/pages/Terms/index.vue') }]
+		children: [{ name: 'Terms', path: '', component: () => import('src/pages/Terms/index.vue') }]
 	},
 
 	// The main route for searching and adding connections
 	{
-		path: '/',
+		path: '/search',
 		component: () => import('layouts/MainLayout.vue'),
 		children: [
-			{ path: ':domain', component: () => import('src/pages/Home/index.vue') },
+			{ name: 'Search', path: ':domain', component: () => import('src/pages/Home/index.vue') },
 			{ path: '', component: () => import('src/pages/Home/index.vue') }
 		]
+	},
+
+	// In case they go to root
+	{
+		path: '/',
+		redirect: { name: 'Search' }
 	},
 
 	// Always leave this as last one!

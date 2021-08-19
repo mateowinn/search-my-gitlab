@@ -59,9 +59,10 @@ const Project = new Vue({
 		 * A recursive function that gets all projects that the user is a member of in sets of 100
 		 *
 		 * @param {Connection} conn - the particular connection we should fetch projects from
-		 * @param {Int} page - the page (of 100s) that we should be fetching this time around
+		 * @param {Array<Project>} results - an array of the aggregated results we've received. We keep track of this so that we can load all of our projects at once in the end.
+		 * @param {String} lastCursor - the unique token Gitlab gives us to send if there are more projects to be fetched
 		 */
-		fetchProjectsByPage(conn, lastCursor) {
+		fetchProjectsByPage(conn, results = [], lastCursor) {
 			const apolloClient = ApolloClients.client(conn);
 
 			apolloClient
@@ -90,8 +91,8 @@ const Project = new Vue({
 							group.avatarUrl = null;
 						}
 
-						// Add the filtered projection to our list
-						this.allProjects[conn.index].push({
+						// Add the filtered projection to our running list
+						results.push({
 							id: +project.id.split('gid://gitlab/Project/')[1],
 							name: project.name,
 							defaultBranch: project.repository.rootRef,
@@ -102,11 +103,11 @@ const Project = new Vue({
 						});
 					}
 
-					this.$set(this.allProjects, conn.index, this.allProjects[conn.index]);
-
 					// Run this again and again if we detect that there may be more projects
 					if (response.data.projects.pageInfo.hasNextPage) {
-						this.fetchProjectsByPage(conn, response.data.projects.pageInfo.endCursor);
+						this.fetchProjectsByPage(conn, results, response.data.projects.pageInfo.endCursor);
+					} else {
+						this.$set(this.allProjects, conn.index, results);
 					}
 				})
 				.catch((e) => {
@@ -127,6 +128,9 @@ const Project = new Vue({
 						},
 						'Failed to get projects with specified connection and cursor location'
 					);
+
+					// Be sure to set whatever we can! Or the user won't get anything at all.
+					this.$set(this.allProjects, conn.index, results);
 				});
 		},
 
