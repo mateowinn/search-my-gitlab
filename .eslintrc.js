@@ -50,7 +50,7 @@ module.exports = {
 		chrome: 'readonly'
 	},
 
-	// add your custom rules here
+	// Add custom rules and overrides here
 	rules: {
 		'import/namespace': 0,
 		'import/newline-after-import': 0,

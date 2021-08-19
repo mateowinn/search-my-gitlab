@@ -23,7 +23,7 @@
 					:name="conn.index"
 					:icon="conn.icon"
 					:label="conn.domain && conn.domain.split('//')[1]"
-					class="shadow-1 "
+					class="shadow-1"
 				/>
 			</q-tabs>
 
@@ -434,7 +434,7 @@ export default {
 		 */
 		currentProjects: {
 			handler(currentVal) {
-				if ((!currentVal || currentVal.length === 0) && !this.error) {
+				if ((!currentVal || currentVal.length === 0) && this.tabIndex !== 'add' && !this.error) {
 					// Looks like we're still loading
 					this.loadingProjects = true;
 				} else {
