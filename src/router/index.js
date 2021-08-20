@@ -26,7 +26,7 @@ export default function(/* { store, ssrContext } */) {
 		base: process.env.VUE_ROUTER_BASE
 	});
 
-	Router.afterEach((to, from) => {
+	Router.afterEach((to) => {
 		// Add our route to Google Analytics
 		gtm.logPage(to.path, to.name);
 	});
