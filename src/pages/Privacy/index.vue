@@ -16,10 +16,11 @@
 				Cookies
 			</h2>
 			<p>
-				<!-- <strong class="text-secondary">Search My Gitlab</strong> uses Google Analytics for the purpose of seeing what content is most viewed and to measure visitor numbers to the website. Google Analytics uses cookies. -->
-				<strong class="text-secondary">Search My Gitlab</strong> uses your browser's Local Storage (like cookies) to save user sessions so it
-				is not necessary to input your information each time you visit. Removal of locally stored user data can be achieved by clearing this
-				site's cookies in your browser's settings.
+				<strong class="text-secondary">Search My Gitlab</strong> uses Google Analytics for the purpose of seeing what content is most viewed
+				and to measure visitor numbers to the website. Google Analytics uses cookies.
+				<strong class="text-secondary">Search My Gitlab</strong> also uses your browser's Local Storage (like cookies) to save user sessions
+				so it is not necessary to input your information each time you visit. Removal of locally stored user data can be achieved by clearing
+				this site's cookies in your browser's settings.
 			</p>
 		</div>
 	</q-page>
