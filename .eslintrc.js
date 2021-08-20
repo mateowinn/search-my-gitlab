@@ -11,8 +11,6 @@ module.exports = {
 	},
 
 	env: {
-		ga: true, // Google Analytics
-		cy: true, // Cypress
 		browser: true,
 		jest: true,
 		es6: true,
