@@ -267,6 +267,10 @@ export default {
 			default: () => {
 				// Nothing, I guess
 			}
+		},
+		searchBranch: {
+			type: String,
+			default: ''
 		}
 	},
 	data() {
@@ -466,6 +470,15 @@ export default {
 
 					for (const groupId of Object.keys(projectsToSearch)) {
 						for (const project of projectsToSearch[groupId]) {
+							let searchUrl = `${this.conn.domain}/api/v4/projects/${project.id}/search?scope=blobs&per_page=${
+								this.pageSize
+							}&search=${encodeURIComponent(this.searchQuery)}`;
+
+							if (this.searchBranch !== '') {
+								// In the event that the user actually specifies a particular branch they want to search throughout the repos
+								searchUrl += `&ref=${this.searchBranch}`;
+							}
+
 							// Fire off a search for every project in every group that the user has specified
 							allSearchPromises.push(
 								axios({
@@ -473,9 +486,7 @@ export default {
 									headers: {
 										'Private-Token': this.conn.token
 									},
-									url: `${this.conn.domain}/api/v4/projects/${project.id}/search?scope=blobs&per_page=${
-										this.pageSize
-									}&search=${encodeURIComponent(this.searchQuery)}`
+									url: searchUrl
 								})
 									.then((response) => {
 										// I don't really want this to pop up in the list if it didn't actually return anything

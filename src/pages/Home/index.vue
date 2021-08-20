@@ -35,6 +35,7 @@
 						:projects="conn.index === tabIndex ? filteredProjects : {}"
 						:groups="conn.index === tabIndex ? filteredGroups : []"
 						:toggle-drawer="toggleDrawer"
+						:search-branch="searchBranch"
 					/>
 				</q-tab-panel>
 			</q-tab-panels>
@@ -55,6 +56,8 @@
 			:clear-filters="clearAllFilters"
 			:show-archived="showArchived"
 			:toggle-archives="toggleArchives"
+			:search-branch="searchBranch"
+			:update-search-branch="updateSearchBranch"
 		/>
 
 		<!-- A pop-up dialog we can use for telling the user what happened in event of error -->
@@ -75,6 +78,7 @@ export default {
 		return {
 			filterDrawerOpen: false,
 			showArchived: window.localStorage.getItem('showArchived') === 'true',
+			searchBranch: '',
 			error: '',
 			loadingProjects: false
 		};
@@ -417,6 +421,10 @@ export default {
 		},
 		reloadWindow() {
 			window.location.reload();
+		},
+		updateSearchBranch(event) {
+			console.log('event', event);
+			this.searchBranch = event.target.value;
 		}
 	},
 	watch: {

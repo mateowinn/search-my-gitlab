@@ -28,6 +28,21 @@
 				</q-card-section>
 			</q-card>
 
+			<q-card flat square class="text-white bg-primary">
+				<!-- The title section -->
+				<q-card-section class="row items-center text-white">
+					<q-input
+						filled
+						:value="searchBranch"
+						label="Branch to Search"
+						hint="E.g. 'master'. Empty searches repo default."
+						@keyup.enter="updateSearchBranch"
+						clearable
+						class="text-white"
+					/>
+				</q-card-section>
+			</q-card>
+
 			<!-- One line at the top to show whether we're searching ALL projects -->
 			<q-item>
 				<q-item-section side>
@@ -119,6 +134,16 @@ export default {
 			default: false
 		},
 		toggleArchives: {
+			type: Function,
+			default: () => {
+				/* Nothing, I guess */
+			}
+		},
+		searchBranch: {
+			type: String,
+			default: ''
+		},
+		updateSearchBranch: {
 			type: Function,
 			default: () => {
 				/* Nothing, I guess */
