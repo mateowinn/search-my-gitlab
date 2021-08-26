@@ -34,8 +34,8 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 
 ### Priorities
 
--   Add Google Analytics
--   Add ability to specify branches to search
+-   Add a copy/share link feature to easily share searches with others
+-   Break down components to be even more modular
 -   Add feature to search out differences between branches in repositories
 -   Finish tests, of course
 -   Sync credentials between clients through login?

@@ -221,6 +221,9 @@ export default {
 			if (this.$route.query.search) {
 				filters.search = this.$route.query.search;
 			}
+			if (this.$route.query.branch) {
+				filters.branch = this.$route.query.branch;
+			}
 
 			return filters;
 		},
@@ -388,13 +391,22 @@ export default {
 		},
 		clearAllFilters() {
 			// Clear the router query
-			this.$router.replace({
+			const cleared = {
 				...this.$router.currentRoute,
 				query: {
 					// Clear everything BUT the current search
 					search: this.$route.query.search
 				}
-			});
+			};
+
+			// Just in case there IS NO BRANCH, we don't want an empty branch query param hanging around
+			if (this.$route.query.branch) {
+				cleared.query.branch = this.$route.query.branch;
+			} else {
+				delete cleared.query.branch;
+			}
+
+			this.$router.replace(cleared);
 		},
 		toggleArchives(showArchived) {
 			this.showArchived = showArchived;
