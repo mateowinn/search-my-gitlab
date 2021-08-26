@@ -35,7 +35,6 @@
 						:projects="conn.index === tabIndex ? filteredProjects : {}"
 						:groups="conn.index === tabIndex ? filteredGroups : []"
 						:toggle-drawer="toggleDrawer"
-						:search-branch="searchBranch"
 					/>
 				</q-tab-panel>
 			</q-tab-panels>
@@ -56,8 +55,6 @@
 			:clear-filters="clearAllFilters"
 			:show-archived="showArchived"
 			:toggle-archives="toggleArchives"
-			:search-branch="searchBranch"
-			:update-search-branch="updateSearchBranch"
 		/>
 
 		<!-- A pop-up dialog we can use for telling the user what happened in event of error -->
@@ -78,7 +75,6 @@ export default {
 		return {
 			filterDrawerOpen: false,
 			showArchived: window.localStorage.getItem('showArchived') === 'true',
-			searchBranch: '',
 			error: '',
 			loadingProjects: false
 		};
@@ -224,6 +220,9 @@ export default {
 			// Always try to keep the search query parameters
 			if (this.$route.query.search) {
 				filters.search = this.$route.query.search;
+			}
+			if (this.$route.query.branch) {
+				filters.branch = this.$route.query.branch;
 			}
 
 			return filters;
@@ -392,13 +391,22 @@ export default {
 		},
 		clearAllFilters() {
 			// Clear the router query
-			this.$router.replace({
+			const cleared = {
 				...this.$router.currentRoute,
 				query: {
 					// Clear everything BUT the current search
 					search: this.$route.query.search
 				}
-			});
+			};
+
+			// Just in case there IS NO BRANCH, we don't want an empty branch query param hanging around
+			if (this.$route.query.branch) {
+				cleared.query.branch = this.$route.query.branch;
+			} else {
+				delete cleared.query.branch;
+			}
+
+			this.$router.replace(cleared);
 		},
 		toggleArchives(showArchived) {
 			this.showArchived = showArchived;
@@ -421,10 +429,6 @@ export default {
 		},
 		reloadWindow() {
 			window.location.reload();
-		},
-		updateSearchBranch(event) {
-			console.log('event', event);
-			this.searchBranch = event.target.value;
 		}
 	},
 	watch: {

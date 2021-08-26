@@ -10,6 +10,8 @@ const path = require('path');
 /* eslint-env node */
 const ESLintPlugin = require('eslint-webpack-plugin');
 
+const packageJson = require('./package.json');
+
 module.exports = function(/* ctx */) {
 	return {
 		// https://v1.quasar.dev/quasar-cli/supporting-ts
@@ -44,6 +46,12 @@ module.exports = function(/* ctx */) {
 		build: {
 			vueRouterMode: 'history', // available values: 'hash', 'history'
 			publicPath: '/',
+
+			// Make it so that our referenced process.env vars are replaced with their values
+			env: {
+				...process.env,
+				PACKAGE_VERSION: packageJson.version
+			},
 
 			// transpile: false,
 
@@ -150,7 +158,10 @@ module.exports = function(/* ctx */) {
 		// https://v1.quasar.dev/quasar-cli/developing-pwa/configuring-pwa
 		pwa: {
 			workboxPluginMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-			workboxOptions: {}, // only for GenerateSW
+			workboxOptions: {
+				skipWaiting: true,
+				clientsClaim: true
+			}, // only for GenerateSW
 			manifest: {
 				name: `Search My Gitlab`,
 				short_name: `Search My Gitlab`,

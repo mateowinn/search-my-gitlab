@@ -6,12 +6,39 @@
 	<div v-else class="q-gutter-md" style="width: 100vw;">
 		<!-- Our search bar and link to open filters -->
 		<q-card flat class="search-container text-right q-pa-none">
+			<!-- Opens the search drawer -->
 			<a href="#" @click.prevent.stop="toggleDrawer">Adjust Search Scope</a>
-			<q-input filled v-model="searchQuery" label="Search" hint="E.g. 'foo bar baz'" @keyup.enter="initiateSearch(searchQuery)" clearable>
-				<template v-slot:append>
-					<q-icon name="search" @click="initiateSearch(searchQuery)" />
-				</template>
-			</q-input>
+
+			<div class="row q-gutter-md wrap">
+				<!-- The actual search term input -->
+				<q-input
+					filled
+					v-model="searchQuery"
+					label="Search"
+					hint="E.g. 'foo bar baz'"
+					@keyup.enter="initiateSearch(searchQuery)"
+					clearable
+					style="flex-grow: 4;"
+				>
+					<template v-slot:append>
+						<q-icon name="search" @click="initiateSearch(searchQuery)" />
+					</template>
+				</q-input>
+
+				<!-- Optional filtering by branch name -->
+				<q-input
+					filled
+					v-model="searchBranch"
+					label="Branch to Search"
+					placeholder="E.g. master"
+					hint="Searches project default if empty"
+					@keyup.enter="initiateSearch(searchQuery, true)"
+					clearable
+					@clear="initiateSearch(searchQuery, true)"
+					style="flex-grow: 1;"
+				>
+				</q-input>
+			</div>
 		</q-card>
 
 		<!-- A modal for confirming the user's intentions if they try doing a search with less than 4 letters -->
@@ -267,15 +294,12 @@ export default {
 			default: () => {
 				// Nothing, I guess
 			}
-		},
-		searchBranch: {
-			type: String,
-			default: ''
 		}
 	},
 	data() {
 		return {
 			searchQuery: '',
+			searchBranch: '',
 			confirmQuery: false,
 			pageSize: 20,
 			results: {},
@@ -442,6 +466,13 @@ export default {
 				};
 				routeQuery.search = query;
 
+				if (this.searchBranch === '') {
+					// If they've reverted to clearing the branch name, then we revert to simply clearing this from the URL so that we search by repo default branch
+					delete routeQuery.branch;
+				} else {
+					routeQuery.branch = this.searchBranch;
+				}
+
 				this.$router.push({ path: this.$route.path, query: routeQuery });
 			}
 		},
@@ -462,7 +493,10 @@ export default {
 				this.queryTime = 0;
 				this.loading = true; // Show the loading animation
 
-				logger.info({ query: this.searchQuery, connIndex: this.conn.index, projects: projectsToSearch }, 'Executing search');
+				logger.info(
+					{ query: this.searchQuery, branch: this.searchBranch, connIndex: this.conn.index, projects: projectsToSearch },
+					'Executing search'
+				);
 
 				// Now comes the fun part....cycling through every selected project in every group and aggregating the results
 				try {
@@ -530,6 +564,7 @@ export default {
 											{
 												error: e,
 												query: this.searchQuery,
+												branch: this.searchBranch,
 												groupId: groupId,
 												projectId: project.id
 											},
@@ -567,7 +602,7 @@ export default {
 					// Fire them all off at the same time and wait for them all to resolve
 					await Promise.all(allSearchPromises);
 				} catch (e) {
-					logger.error({ error: e, query: this.searchQuery }, 'Error executing searches');
+					logger.error({ error: e, query: this.searchQuery, branch: this.searchBranch }, 'Error executing searches');
 				}
 
 				// Turn off the loading animation
@@ -628,14 +663,21 @@ export default {
 			this.$set(this.projectsQueried[projectId], 'page', this.projectsQueried[projectId].page + 1);
 
 			try {
+				let searchUrl = `${this.conn.domain}/api/v4/projects/${projectId}/search?scope=blobs&per_page=${this.pageSize}&page=${
+					this.projectsQueried[projectId].page
+				}&search=${encodeURIComponent(this.searchQuery)}`;
+
+				if (this.searchBranch !== '') {
+					// In the event that the user actually specifies a particular branch they want to search throughout the repos
+					searchUrl += `&ref=${this.searchBranch}`;
+				}
+
 				const moreResults = await axios({
 					method: 'get',
 					headers: {
 						'Private-Token': this.conn.token
 					},
-					url: `${this.conn.domain}/api/v4/projects/${projectId}/search?scope=blobs&per_page=${this.pageSize}&page=${
-						this.projectsQueried[projectId].page
-					}&search=${encodeURIComponent(this.searchQuery)}`
+					url: searchUrl
 				});
 
 				if (moreResults.data.length < 1) {
@@ -676,7 +718,10 @@ export default {
 				this.$set(this.projectsQueried[projectId], 'error', e);
 				this.$set(this.projectsQueried[projectId], 'done', true);
 
-				logger.error({ projectId, query: this.searchQuery, error: e }, 'Failed to get additional results for project');
+				logger.error(
+					{ projectId, query: this.searchQuery, branch: this.searchBranch, error: e },
+					'Failed to get additional results for project'
+				);
 			}
 
 			// Turn off the loading animation
@@ -766,27 +811,45 @@ export default {
 					this.$set(result, 'hidden', false);
 				}
 			}
-		}
-	},
-	watch: {
+		},
+
 		/**
 		 * Every time we get a new query, we want to re-execute the entire thing
 		 */
+		resetSearch() {
+			// Reset a bunch of figures related to our results
+			this.$set(this, 'results', {});
+			this.$set(this, 'projectsQueried', {});
+			this.$set(this, 'projectsWithResults', 0);
+			this.$set(this, 'resultsCount', 0);
+			this.$set(this, 'someHaveMore', false);
+			this.searchQuery = this.$route.query.search;
+
+			// Keep tabs, as well, on what branch we ought to be searching
+			if (this.$route.query.branch) {
+				this.searchBranch = this.$route.query.branch;
+			} else {
+				this.searchBranch = '';
+			}
+
+			// Re-execute the search every time the search changes
+			this.executeSearch(this.projects);
+		}
+	},
+	watch: {
 		'$route.query.search': {
 			immediate: true,
 			handler() {
-				// Reset a bunch of figures related to our results
-				this.$set(this, 'results', {});
-				this.$set(this, 'projectsQueried', {});
-				this.$set(this, 'projectsWithResults', 0);
-				this.$set(this, 'resultsCount', 0);
-				this.$set(this, 'someHaveMore', false);
-				this.searchQuery = this.$route.query.search;
-
-				// Re-execute the search every time the search changes
-				this.executeSearch(this.projects);
+				this.resetSearch();
 			}
 		},
+		'$route.query.branch': {
+			immediate: true,
+			handler() {
+				this.resetSearch();
+			}
+		},
+
 		/**
 		 * Every time our list of searchable projects changes we want to see if a search execution is necessary
 		 */

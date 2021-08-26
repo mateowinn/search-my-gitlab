@@ -5,7 +5,12 @@
 </template>
 
 <script>
+import logger from 'utilities/logger';
+
 export default {
-	name: 'App'
+	name: 'App',
+	created() {
+		logger.info('Running app version', process.env.PACKAGE_VERSION);
+	}
 };
 </script>
