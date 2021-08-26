@@ -4,6 +4,7 @@
 		<title><%= productName %></title>
 
 		<meta charset="utf-8" />
+		<meta name="title" content="<%= productName %>" />
 		<meta name="description" content="<%= productDescription %>" />
 		<meta name="format-detection" content="telephone=no" />
 		<meta name="msapplication-tap-highlight" content="no" />
@@ -11,6 +12,12 @@
 			name="viewport"
 			content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width<% if (ctx.mode.cordova || ctx.mode.capacitor) { %>, viewport-fit=cover<% } %>"
 		/>
+
+		<!-- Link preview meta data -->
+		<meta name="keywords" content="gitlab, search" />
+		<meta property="og:title" content="<%= productName %>" />
+		<meta property="og:description" content="<%= productDescription %>" />
+		<meta property="og:image" content="icons/apple-icon-180x180.png" />
 
 		<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=G-CSXKYD03Y0"></script>
