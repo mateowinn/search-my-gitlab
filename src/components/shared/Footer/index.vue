@@ -26,58 +26,14 @@
 
 		<!-- Our links -->
 		<div class="footer__links">
-			<q-list dense padding>
-				<q-item-label header>Resources</q-item-label>
+			<q-list dense padding v-for="(group, groupTitle) in links" :key="'link-group-' + groupTitle">
+				<q-item-label header>{{ groupTitle }}</q-item-label>
 
-				<q-item>
+				<q-item v-for="(link, index) of group" :key="groupTitle + '-link-' + index">
 					<q-item-section>
-						<a href="https://gitlab.com/mateowinn/search-my-gitlab" target="_blank">Contribute</a>
-					</q-item-section>
-				</q-item>
-
-				<q-item>
-					<q-item-section>
-						<a href="#" @click.prevent.stop="updateModal('blog')">Blog</a>
-					</q-item-section>
-				</q-item>
-
-				<q-item>
-					<q-item-section>
-						<router-link :to="{ path: '/terms' }">Terms & Conditions</router-link>
-					</q-item-section>
-				</q-item>
-
-				<q-item>
-					<q-item-section>
-						<router-link :to="{ path: '/privacy' }">Privacy Policy</router-link>
-					</q-item-section>
-				</q-item>
-			</q-list>
-
-			<q-list dense padding>
-				<q-item-label header>Support</q-item-label>
-
-				<q-item>
-					<q-item-section>
-						<router-link :to="{ path: '/about' }">About</router-link>
-					</q-item-section>
-				</q-item>
-
-				<q-item>
-					<q-item-section>
-						<a href="https://gitlab.com/mateowinn" target="_blank">Contact</a>
-					</q-item-section>
-				</q-item>
-
-				<q-item>
-					<q-item-section>
-						<a href="https://owalalife.com/" target="_blank">Hydrate</a>
-					</q-item-section>
-				</q-item>
-
-				<q-item>
-					<q-item-section>
-						<a href="https://www.betterbits.io" target="_blank">Better Bits</a>
+						<a v-if="link.url" :href="link.url" target="_blank">{{ link.text }}</a>
+						<a v-if="link.modalParam" href="#" @click.prevent.stop="updateModal(link.modalParam)">{{ link.text }}</a>
+						<router-link v-if="link.path" :to="{ path: link.path }">{{ link.text }}</router-link>
 					</q-item-section>
 				</q-item>
 			</q-list>
@@ -103,7 +59,45 @@ export default {
 			showModal: false,
 			modalHeader: '',
 			modalText: '',
-			modalButton: ''
+			modalButton: '',
+			links: {
+				Resources: [
+					{
+						text: 'Contribute',
+						url: 'https://gitlab.com/mateowinn/search-my-gitlab'
+					},
+					{
+						text: 'Blog',
+						modalParam: 'blog'
+					},
+					{
+						text: 'Terms & Conditions',
+						path: '/terms'
+					},
+					{
+						text: 'Privacy Policy',
+						path: '/privacy'
+					}
+				],
+				Support: [
+					{
+						text: 'About',
+						path: '/about'
+					},
+					{
+						text: 'Contact',
+						url: 'https://gitlab.com/mateowinn'
+					},
+					{
+						text: 'Hydrate',
+						url: 'https://owalalife.com/'
+					},
+					{
+						text: 'Better Bits',
+						url: 'https://www.betterbits.io'
+					}
+				]
+			}
 		};
 	},
 	methods: {
