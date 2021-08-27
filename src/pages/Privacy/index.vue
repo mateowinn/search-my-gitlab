@@ -31,10 +31,3 @@ export default {
 	name: 'Privacy'
 };
 </script>
-
-<style lang="scss">
-.intros {
-	text-align: left;
-	line-height: 24px;
-}
-</style>

@@ -42,6 +42,7 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 
 ### Nice-to-Haves
 
+-   Upgrade 404 page with gifs
 -   Extend syntax highlighting to more languages
 -   Make color schemes selectable
 -   Allow domain tabs to be configurable in their order

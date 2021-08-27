@@ -5,41 +5,7 @@
 	<!-- Otherwise, show them the full glory of the search tab! -->
 	<div v-else class="q-gutter-md" style="width: 100vw;">
 		<!-- Our search bar and link to open filters -->
-		<q-card flat class="search-container text-right q-pa-none">
-			<!-- Opens the search drawer -->
-			<a href="#" @click.prevent.stop="toggleDrawer">Adjust Search Scope</a>
-
-			<div class="row q-gutter-md wrap">
-				<!-- The actual search term input -->
-				<q-input
-					filled
-					v-model="searchQuery"
-					label="Search"
-					hint="E.g. 'foo bar baz'"
-					@keyup.enter="initiateSearch(searchQuery)"
-					clearable
-					style="flex-grow: 4;"
-				>
-					<template v-slot:append>
-						<q-icon name="search" @click="initiateSearch(searchQuery)" />
-					</template>
-				</q-input>
-
-				<!-- Optional filtering by branch name -->
-				<q-input
-					filled
-					v-model="searchBranch"
-					label="Branch to Search"
-					placeholder="E.g. master"
-					hint="Searches project default if empty"
-					@keyup.enter="initiateSearch(searchQuery, true)"
-					clearable
-					@clear="initiateSearch(searchQuery, true)"
-					style="flex-grow: 1;"
-				>
-				</q-input>
-			</div>
-		</q-card>
+		<SearchBar :toggle-drawer="toggleDrawer" :search-query="searchQuery" :search-branch="searchBranch" :update-search="updateSearch" />
 
 		<!-- A modal for confirming the user's intentions if they try doing a search with less than 4 letters -->
 		<q-dialog v-model="confirmQuery" persistent>
@@ -270,6 +236,7 @@
 import axios from 'axios';
 import logger from 'utilities/logger';
 import AddConnection from './AddConnection/index';
+import SearchBar from './SearchBar';
 import SearchResult from './SearchResult/index';
 import Avatar from 'components/shared/Avatar/index';
 import RestoreCard from 'components/shared/RestoreCard/index';
@@ -449,6 +416,23 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * Updates either searchQuery or searchBranch with the current value. Also can initiate a search if indicated.
+		 *
+		 * @param {String} varName - the name of the variable to update (i.e. "searchQuery" or "searchBranch")
+		 * @param {String} value - the value of the variable you want to update
+		 * @param {Boolean} startSearch - true if the user has hit enter/indicated they want to run the search
+		 */
+		updateSearch(varName, value, startSearch) {
+			// First things first, just update our value
+			this[varName] = value;
+
+			if (startSearch) {
+				// If the user actually hit enter/cleared their search values, then run the search!
+				this.initiateSearch(this.searchQuery);
+			}
+		},
+
 		/**
 		 * Simply modifies our URL search query param, which triggers a search
 		 *
@@ -892,6 +876,7 @@ export default {
 	},
 	components: {
 		AddConnection,
+		SearchBar,
 		SearchResult,
 		Avatar,
 		RestoreCard

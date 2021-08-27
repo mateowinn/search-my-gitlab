@@ -66,10 +66,3 @@ export default {
 	name: 'Terms'
 };
 </script>
-
-<style lang="scss">
-.intros {
-	text-align: left;
-	line-height: 24px;
-}
-</style>
