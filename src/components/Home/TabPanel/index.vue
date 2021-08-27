@@ -5,65 +5,32 @@
 	<!-- Otherwise, show them the full glory of the search tab! -->
 	<div v-else class="q-gutter-md" style="width: 100vw;">
 		<!-- Our search bar and link to open filters -->
-		<SearchBar :toggle-drawer="toggleDrawer" :search-query="searchQuery" :search-branch="searchBranch" :update-search="updateSearch" />
+		<SearchBar
+			:toggle-drawer="toggleDrawer"
+			:search-query="searchQuery"
+			:search-branch="searchBranch"
+			:initiate-search="initiateSearch"
+			@queryChange="(newVal) => (searchQuery = newVal)"
+			@branchChange="(newVal) => (searchBranch = newVal)"
+		/>
 
 		<!-- A modal for confirming the user's intentions if they try doing a search with less than 4 letters -->
-		<q-dialog v-model="confirmQuery" persistent>
-			<q-card>
-				<!-- Warning icon, front and center -->
-				<q-card-section class="text-center">
-					<q-icon name="warning" color="warning" size="lg" />
-				</q-card-section>
-
-				<q-card-section class="text-center">
-					<span class="q-ml-sm"
-						>Are you sure you want to search for "{{ searchQuery }}"? Such a small search term could result in wayyy more results than
-						desired.</span
-					>
-				</q-card-section>
-
-				<!-- Possible actions to take -->
-				<q-card-actions align="around">
-					<q-btn flat label="No, thanks. I'd rather not crash my browser." color="secondary" v-close-popup />
-					<q-btn flat label="Proceed anyway" color="grey-8" @click="initiateSearch(searchQuery, true)" v-close-popup />
-				</q-card-actions>
-			</q-card>
-		</q-dialog>
+		<ConfirmSearchModal v-model="confirmQuery" :search-query="searchQuery" :initiate-search="initiateSearch" />
 
 		<!-- Here we show the user if we failed to fetch results from any of the projects -->
-		<q-card v-if="!loading && errorsToShow && errorsToShow.length > 0" class="bg-warning" style="width: fit-content;">
-			<q-card-section class="q-pb-none"
-				>Shoot. We had a {{ errorsToShow.length > 1 ? 'couple of projects' : 'project' }} that we couldn't seem to wrangle anything out
-				of:</q-card-section
-			>
-
-			<!-- A list of projects we couldn't get results from in form of a link to the project -->
-			<q-card-section class="q-py-xs">
-				<template v-for="(error, index) of errorsToShow">
-					<a :href="error.url" target="_blank" :key="`search-error-${error.id}`" rel="nofollow noopener noreferrer">{{ error.name }}</a
-					>{{ errorsToShow.length - 1 > index ? ', ' : '' }}
-				</template>
-			</q-card-section>
-
-			<q-card-section class="q-pt-none"
-				>Refreshing might do the trick. Otherwise, it's probably a permissions or project visibility problem.</q-card-section
-			>
-		</q-card>
+		<SearchErrors :loading="loading" :projects-queried="projectsQueried" :get-project-by-ids="getProjectByIds" />
 
 		<!-- Search metadata, i.e. how many results we found -->
-		<div v-if="projectsToShow && Object.keys(projectsToShow).length > 0 && !projectsToShow.none" class="search-stats">
-			<span class="text-grey-6"
-				>{{ resultsCount }}{{ someHaveMore ? '+' : '' }} result{{ resultsCount === 1 ? '' : 's' }} found in
-				{{ projectsWithResults }} project{{ projectsWithResults === 1 ? '' : 's' }}</span
-			>
-			<a href="#" @click.prevent.stop="expandAll = !expandAll">{{ expandAll ? 'Collapse All' : 'Expand All' }}</a>
-		</div>
+		<SearchStats
+			v-if="projectsToShow && Object.keys(projectsToShow).length > 0 && !projectsToShow.none"
+			:results-count="resultsCount"
+			:some-have-more="someHaveMore"
+			:projects-with-results="projectsWithResults"
+			:expand-all="expandAll"
+		/>
 
 		<!-- Loading bar and messages for *searches* -->
-		<template v-if="loading">
-			<q-linear-progress :value="loadingPerc" class="search-loader" />
-			<div class="text-h6 text-center">{{ loadingText }}</div>
-		</template>
+		<SearchLoader v-if="loading" :projects-queried="projectsQueried" :query-time="queryTime" />
 
 		<!-- Show a polite message if we actually have no results to show them -->
 		<div v-if="!loading && searchQuery && projectsToShow && projectsToShow.none" class="text-h6 text-center">
@@ -237,6 +204,10 @@ import axios from 'axios';
 import logger from 'utilities/logger';
 import AddConnection from './AddConnection/index';
 import SearchBar from './SearchBar';
+import ConfirmSearchModal from './ConfirmSearchModal';
+import SearchErrors from './SearchErrors';
+import SearchStats from './SearchStats';
+import SearchLoader from './SearchLoader';
 import SearchResult from './SearchResult/index';
 import Avatar from 'components/shared/Avatar/index';
 import RestoreCard from 'components/shared/RestoreCard/index';
@@ -270,7 +241,6 @@ export default {
 			confirmQuery: false,
 			pageSize: 20,
 			results: {},
-			errors: [],
 			loading: false,
 			projectsQueried: {},
 			projectsWithResults: 0,
@@ -298,40 +268,6 @@ export default {
 			}
 
 			return count;
-		},
-
-		/**
-		 * Dynamically calculates the percentage of projects successfully queried
-		 *
-		 * @returns {Float} - the number of projects queried divided by the number of projects still to finish querying
-		 */
-		loadingPerc() {
-			return Object.values(this.projectsQueried).filter((project) => project.loading === false).length / this.projectCount;
-		},
-
-		/**
-		 * Shows various messages during loading time. One dependent on the actual progress but the rest dependent on how long it takes to load.
-		 *
-		 * @returns {String} - the loading message we want to show to the user at any given moment
-		 */
-		loadingText() {
-			if (this.loadingPerc > 0.95) {
-				// A constant message we show when the search is almost finished
-				return 'Putting a bow on it...';
-			} else {
-				// Various messages depending on how long it has taken us to compile results
-				if (this.queryTime > 12) {
-					return '...or maybe your connection is just slow?';
-				} else if (this.queryTime > 9) {
-					return 'Holy cow this is a big place';
-				} else if (this.queryTime > 6) {
-					return 'Rounding up stragglers...';
-				} else if (this.queryTime > 3) {
-					return "Searching dark corners you've never even touched...";
-				} else {
-					return 'Running the Gitlab Gauntlet...';
-				}
-			}
 		},
 
 		/**
@@ -387,60 +323,16 @@ export default {
 			}
 
 			return toShow;
-		},
-
-		/**
-		 * Automatically compiles a list of projects that we failed to get results from and their metadata
-		 *
-		 * @returns {Array<Object>} - an array of objects detailing the projects that we failed to get search results from
-		 */
-		errorsToShow() {
-			const projectsWithErrors = [];
-
-			for (const group of this.groups) {
-				for (const project of this.projects[group.id]) {
-					// Add each project with results that hasn't been filtered out
-					if (this.projectsQueried[project.id] && this.projectsQueried[project.id].error) {
-						const { webUrl } = this.getProjectByIds(project.id);
-
-						projectsWithErrors.push({
-							id: project.id,
-							name: project.name,
-							url: webUrl
-						});
-					}
-				}
-			}
-
-			return projectsWithErrors;
 		}
 	},
 	methods: {
 		/**
-		 * Updates either searchQuery or searchBranch with the current value. Also can initiate a search if indicated.
-		 *
-		 * @param {String} varName - the name of the variable to update (i.e. "searchQuery" or "searchBranch")
-		 * @param {String} value - the value of the variable you want to update
-		 * @param {Boolean} startSearch - true if the user has hit enter/indicated they want to run the search
-		 */
-		updateSearch(varName, value, startSearch) {
-			// First things first, just update our value
-			this[varName] = value;
-
-			if (startSearch) {
-				// If the user actually hit enter/cleared their search values, then run the search!
-				this.initiateSearch(this.searchQuery);
-			}
-		},
-
-		/**
 		 * Simply modifies our URL search query param, which triggers a search
 		 *
-		 * @param {String} query - the text to search for which the user has entered
 		 * @param {Boolean} confirmed - whether or not we've already warned this user about their small search query
 		 */
-		initiateSearch(query, confirmed) {
-			if (query.length < 4 && !confirmed) {
+		initiateSearch(confirmed) {
+			if (this.searchQuery.length < 4 && !confirmed) {
 				// If the user is attempting a really small query, then I'd really rather warn them of the consequences
 				this.confirmQuery = true;
 			} else {
@@ -448,7 +340,7 @@ export default {
 				const routeQuery = {
 					...this.$route.query
 				};
-				routeQuery.search = query;
+				routeQuery.search = this.searchQuery;
 
 				if (this.searchBranch === '') {
 					// If they've reverted to clearing the branch name, then we revert to simply clearing this from the URL so that we search by repo default branch
@@ -827,11 +719,8 @@ export default {
 				this.resetSearch();
 			}
 		},
-		'$route.query.branch': {
-			immediate: true,
-			handler() {
-				this.resetSearch();
-			}
+		'$route.query.branch'() {
+			this.resetSearch();
 		},
 
 		/**
@@ -877,6 +766,10 @@ export default {
 	components: {
 		AddConnection,
 		SearchBar,
+		ConfirmSearchModal,
+		SearchErrors,
+		SearchStats,
+		SearchLoader,
 		SearchResult,
 		Avatar,
 		RestoreCard
@@ -885,32 +778,6 @@ export default {
 </script>
 
 <style lang="scss">
-.search-container {
-	& > a {
-		text-decoration: underline;
-	}
-}
-
-.search-loader {
-	width: auto;
-	margin-top: 60px;
-	margin-left: 10%;
-	margin-right: 6%; // I don't know why they can't be the same. Probably some weird parent right padding.
-
-	@media (min-width: $breakpoint-sm-min) {
-		max-width: 800px;
-		margin-top: 100px;
-		margin-left: auto;
-		margin-right: auto;
-	}
-}
-
-.search-stats {
-	padding: 0px 5px;
-	display: flex;
-	justify-content: space-between;
-}
-
 .expansion-inset {
 	padding-left: 12px;
 

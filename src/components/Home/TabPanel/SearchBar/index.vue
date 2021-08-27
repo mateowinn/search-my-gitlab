@@ -5,17 +5,9 @@
 
 		<div class="row q-gutter-md wrap">
 			<!-- The actual search term input -->
-			<q-input
-				filled
-				v-model="query"
-				label="Search"
-				hint="E.g. 'foo bar baz'"
-				@keyup.enter="updateSearch('searchQuery', query, true)"
-				clearable
-				style="flex-grow: 4;"
-			>
+			<q-input filled v-model="query" label="Search" hint="E.g. 'foo bar baz'" @keyup.enter="initiateSearch" clearable style="flex-grow: 4;">
 				<template v-slot:append>
-					<q-icon name="search" @click="updateSearch('searchQuery', query, true)" />
+					<q-icon name="search" @click="initiateSearch" />
 				</template>
 			</q-input>
 
@@ -26,9 +18,9 @@
 				label="Branch to Search"
 				placeholder="E.g. master"
 				hint="Searches project default if empty"
-				@keyup.enter="updateSearch('searchBranch', branch, true)"
+				@keyup.enter="initiateSearch"
 				clearable
-				@clear="updateSearch('searchBranch', branch, true)"
+				@clear="initiateSearch"
 				style="flex-grow: 1;"
 			>
 			</q-input>
@@ -54,40 +46,38 @@ export default {
 			type: String,
 			default: ''
 		},
-		updateSearch: {
+		initiateSearch: {
 			type: Function,
 			default: () => {
 				// Nothing, I guess
 			}
 		}
 	},
-	data() {
-		return {
-			query: '',
-			branch: ''
-		};
-	},
-	watch: {
-		searchQuery: {
-			immediate: true,
-			handler(newVal) {
-				this.query = newVal;
+	computed: {
+		query: {
+			get() {
+				return this.searchQuery;
+			},
+			set(newVal) {
+				this.$emit('queryChange', newVal);
 			}
 		},
-		searchBranch: {
-			immediate: true,
-			handler(newVal) {
-				this.branch = newVal;
+		branch: {
+			get() {
+				return this.searchBranch;
+			},
+			set(newVal) {
+				this.$emit('branchChange', newVal);
 			}
-		},
-		query(newVal) {
-			// We do want to keep searchQuery up to date always, even when they haven't explicitly hit enter and initiated a search
-			this.updateSearch('searchQuery', newVal);
-		},
-		branch(newVal) {
-			// We do want to keep searchBranch up to date always, even when they haven't explicitly hit enter and initiated a search
-			this.updateSearch('searchBranch', newVal);
 		}
 	}
 };
 </script>
+
+<style lang="scss">
+.search-container {
+	& > a {
+		text-decoration: underline;
+	}
+}
+</style>
