@@ -172,7 +172,7 @@ export default {
 			};
 			routeQuery.search = this.searchQuery;
 
-			if (this.searchBranch === '') {
+			if (!this.searchBranch) {
 				// If they've reverted to clearing the branch name, then we revert to simply clearing this from the URL so that we search by repo default branch
 				delete routeQuery.branch;
 			} else {
