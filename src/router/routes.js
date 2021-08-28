@@ -26,8 +26,8 @@ const routes = [
 		path: '/search',
 		component: () => import('layouts/MainLayout.vue'),
 		children: [
-			{ name: 'Search', path: ':domain', component: () => import('src/pages/Home/index.vue') },
-			{ path: '', component: () => import('src/pages/Home/index.vue') }
+			{ path: ':domain', component: () => import('src/pages/Home/index.vue') },
+			{ name: 'Search', path: '', component: () => import('src/pages/Home/index.vue') }
 		]
 	},
 

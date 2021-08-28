@@ -37,6 +37,15 @@ const Client = new Vue({
 	},
 	methods: {
 		/**
+		 * Simply removes the indicated Apollo client from our running list
+		 *
+		 * @param {String|Int} index
+		 */
+		deleteClient(index) {
+			this.$delete(this.allClients, index);
+		},
+
+		/**
 		 * Wipes everything out that we have available directly through our props
 		 */
 		clearAll() {

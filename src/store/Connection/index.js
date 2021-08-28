@@ -1,7 +1,10 @@
 import Vue from 'vue';
-import axios from 'axios';
 import logger from 'utilities/logger';
 import cloneObj from 'utilities/cloneObj';
+import ApolloClients from '../Client';
+
+// Our query definitions
+import GET_PROJECTS_BY_PAGE from 'queries/getProjectsByPage.gql';
 
 // Constants
 const STORED_CONNECTIONS = 'storedConnections';
@@ -80,19 +83,27 @@ const Connection = new Vue({
 		 * @returns {Object} - the added and validated connection object
 		 */
 		async createConn(domain, token) {
+			// A temporary connection object just to use for GraphQL purposes
+			const conn = { domain, token, index: 'add' };
+
 			try {
+				const apolloClient = ApolloClients.client(conn);
+
 				// Make a call with the specified credentials to validate that they're legit
-				const response = await axios({
-					method: 'get',
-					headers: {
-						'Private-Token': token
-					},
-					url: `${domain}/api/v4/projects?membership=true`
+				const { data } = await apolloClient.query({
+					query: GET_PROJECTS_BY_PAGE,
+					variables: {
+						membership: true,
+						first: 1
+					}
 				});
 
-				if (response.data && response.data.length > 0) {
+				if (data && data.projects && data.projects.nodes && data.projects.nodes.length > 0) {
 					// Add to our running list
 					const connection = this.setConnection({ domain, token });
+
+					// (And clear out our temp Apollo client)
+					ApolloClients.deleteClient('add');
 
 					return {
 						data: cloneObj(connection)

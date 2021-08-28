@@ -156,6 +156,11 @@ export default {
 		async onSubmit() {
 			this.loading = true;
 
+			// Make sure that we don't have any other slashes that we shouldn't
+			if ((this.domain.match(/\//g) || []).length > 2) {
+				this.domain = new URL(this.domain).origin;
+			}
+
 			// Pass them onto our store
 			const response = await this.$store.Connection.createConn(this.domain, this.token);
 
