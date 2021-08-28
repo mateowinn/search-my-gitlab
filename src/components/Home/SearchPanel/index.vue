@@ -59,7 +59,7 @@ import SearchLoader from './SearchLoader';
 import SearchResultList from './SearchResultList';
 
 export default {
-	name: 'TabPanel',
+	name: 'SearchPanel',
 	props: {
 		conn: {
 			type: Object,

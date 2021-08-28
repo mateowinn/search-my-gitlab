@@ -30,7 +30,7 @@
 			<!-- The actual content under each tab -->
 			<q-tab-panels v-model="tabIndex" style="overflow: hidden">
 				<q-tab-panel v-for="conn of connections" :key="'panel-' + conn.index" :name="conn.index" class="flex flex-center tab-panel">
-					<TabPanel
+					<SearchPanel
 						:conn="conn"
 						:projects="conn.index === tabIndex ? filteredProjects : {}"
 						:groups="conn.index === tabIndex ? filteredGroups : []"
@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import TabPanel from 'src/components/Home/TabPanel/index';
+import SearchPanel from 'src/components/Home/SearchPanel/index';
 import FilterDrawer from 'src/components/Home/FilterDrawer/index';
 import ErrorDialog from 'src/components/shared/ErrorDialog/index';
 
@@ -456,7 +456,7 @@ export default {
 		}
 	},
 	components: {
-		TabPanel,
+		SearchPanel,
 		FilterDrawer,
 		ErrorDialog
 	},
