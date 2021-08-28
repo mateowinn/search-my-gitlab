@@ -16,7 +16,7 @@
 			<!-- Possible actions to take -->
 			<q-card-actions align="around">
 				<q-btn flat label="No, thanks. I'd rather not crash my browser." color="secondary" v-close-popup />
-				<q-btn flat label="Proceed anyway" color="grey-8" @click="initiateSearch(searchQuery, true)" v-close-popup />
+				<q-btn flat label="Proceed anyway" color="grey-8" @click="confirmSearch(searchQuery, true)" v-close-popup />
 			</q-card-actions>
 		</q-card>
 	</q-dialog>
@@ -34,7 +34,7 @@ export default {
 			type: String,
 			default: ''
 		},
-		initiateSearch: {
+		confirmSearch: {
 			type: Function,
 			default: () => {
 				// Nothing, I guess

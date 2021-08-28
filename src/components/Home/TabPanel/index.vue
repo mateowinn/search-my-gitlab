@@ -14,9 +14,6 @@
 			@branchChange="(newVal) => (searchBranch = newVal)"
 		/>
 
-		<!-- A modal for confirming the user's intentions if they try doing a search with less than 4 letters -->
-		<ConfirmSearchModal v-model="confirmQuery" :search-query="searchQuery" :initiate-search="initiateSearch" />
-
 		<!-- Here we show the user if we failed to fetch results from any of the projects -->
 		<SearchErrors :loading="loading" :projects-queried="projectsQueried" :get-project-by-ids="getProjectByIds" />
 
@@ -33,169 +30,21 @@
 		<SearchLoader v-if="loading" :projects-queried="projectsQueried" :query-time="queryTime" />
 
 		<!-- Show a polite message if we actually have no results to show them -->
-		<div v-if="!loading && searchQuery && projectsToShow && projectsToShow.none" class="text-h6 text-center">
+		<div v-if="!loading && searchQuery && projectsToShow && projectsToShow.none" class="text-h6 text-center q-pt-md">
 			Well, poop. We've got nothing that matches that criteria.
 		</div>
 
-		<q-list
+		<SearchResultList
 			v-if="!loading && projectsToShow && Object.keys(projectsToShow).length > 0 && !projectsToShow.none"
-			separator
-			bordered
-			class="rounded-borders"
-			ref="parentList"
-		>
-			<!-- Woo-hoo! We've got results to show! -->
-			<transition name="fade" v-for="(group, groupId) in projectsToShow" :key="'group-results-' + groupId">
-				<template v-if="group && Object.keys(group).length">
-					<!-- If the user has marked this group for hiding, then we show this Undo invitation message for 10 seconds before deleting -->
-					<RestoreCard v-if="groupsHidden.indexOf(+groupId) !== -1" type="group" :restore-fn="restoreResults.bind(null, groupId)" />
-
-					<!-- Otherwise, we just have an expansion list of the results -->
-					<q-expansion-item v-else>
-						<template v-slot:header>
-							<!-- Group picture -->
-							<q-item-section avatar>
-								<Avatar :entity="getGroupById(groupId)" />
-							</q-item-section>
-
-							<q-item-section>
-								{{ getGroupById(groupId).name }}
-							</q-item-section>
-
-							<q-space />
-
-							<!-- Allows the user to hide/remove this result from the list -->
-							<q-btn
-								icon="delete"
-								color="grey-7"
-								size="sm"
-								flat
-								style="vertical-align: middle;"
-								@click.stop.prevent="hideResults(groupId)"
-							>
-								<q-tooltip>
-									Remove group from search results
-								</q-tooltip>
-							</q-btn>
-						</template>
-
-						<q-separator />
-
-						<!-- Create an expandansion item for every project inside of every group expansion item -->
-						<q-list class="expansion-inset">
-							<transition name="fade" v-for="(projectResults, projectId) in group" :key="'project-results' + projectId">
-								<template v-if="projectResults && projectResults.length">
-									<!-- If the user has marked this project for hiding, then we show this Undo invitation message for 10 seconds before deleting -->
-									<RestoreCard
-										v-if="projectsHidden.indexOf(+projectId) !== -1"
-										type="project"
-										:restore-fn="restoreResults.bind(null, groupId, projectId)"
-									/>
-
-									<!-- Otherwise, we just have an expansion list of the results -->
-									<q-expansion-item v-else>
-										<template v-slot:header>
-											<!-- Project picture -->
-											<q-item-section avatar>
-												<Avatar :entity="getProjectByIds(projectId)" />
-											</q-item-section>
-
-											<q-item-section class="expansion-inset__name">
-												<span>{{ getProjectByIds(projectId).name }}</span>
-
-												<!-- An icon link to allow users to open this project directly -->
-												<q-btn
-													type="a"
-													icon="open_in_new"
-													color="grey-8"
-													size="sm"
-													flat
-													:href="getProjectByIds(projectId).webUrl"
-													target="_blank"
-												/>
-											</q-item-section>
-
-											<q-space />
-
-											<!-- Allows the user to hide/remove this project and its results from the list -->
-											<q-btn
-												icon="delete"
-												color="grey-7"
-												size="sm"
-												flat
-												style="vertical-align: middle;"
-												@click.stop.prevent="hideResults(groupId, projectId)"
-											>
-												<q-tooltip>
-													Remove project from search results
-												</q-tooltip>
-											</q-btn>
-										</template>
-
-										<!-- Loop through the children (projects) and show them all -->
-										<q-list class="expansion-inset">
-											<transition
-												name="fade"
-												v-for="(searchResult, index) of projectResults"
-												:key="`result-${projectId}-${searchResult.index}`"
-											>
-												<SearchResult
-													v-if="searchResult"
-													:id="`result-${projectId}-${searchResult.index}`"
-													:result="searchResult"
-													:result-index="index"
-													:search-query="searchQuery"
-													:expand-all="expandAll"
-													:group-id="groupId"
-													:hide-result="hideResults"
-													:restore-result="restoreResults"
-												/>
-											</transition>
-										</q-list>
-
-										<!-- Show them a load more button if we think there might be more -->
-										<q-btn
-											v-if="
-												projectsQueried[projectId].hasMore &&
-													!projectsQueried[projectId].loading &&
-													!projectsQueried[projectId].error
-											"
-											@click.prevent="loadMore(groupId, projectId)"
-											color="primary"
-											class="q-my-lg q-mx-auto"
-											style="display: block; min-width: 200px;"
-											>Load More</q-btn
-										>
-
-										<!-- Our loading animation while we fetch more -->
-										<q-circular-progress
-											v-if="projectsQueried[projectId].loading"
-											indeterminate
-											size="50px"
-											color="secondary"
-											class="q-my-lg q-mx-auto"
-											style="display: block;"
-										/>
-
-										<div v-if="projectsQueried[projectId].done" class="text-center q-pa-lg">
-											<q-icon name="sd_card_alert" color="warning" size="sm" class="vertical-top" />
-											<span v-if="projectsQueried[projectId].error" class="text-subtitle1"
-												>Dang it! Your account seems to think I'm bugging it too much. Maybe...refresh?</span
-											>
-											<span v-else class="text-subtitle1"
-												>Uhh, never mind...looks like that was actually the last of it. Carry on!</span
-											>
-										</div>
-
-										<q-separator />
-									</q-expansion-item>
-								</template>
-							</transition>
-						</q-list>
-					</q-expansion-item>
-				</template>
-			</transition>
-		</q-list>
+			:groups="groups"
+			:projects-to-show="projectsToShow"
+			:projects-queried="projectsQueried"
+			:results="results"
+			:get-project-by-ids="getProjectByIds"
+			:search-query="searchQuery"
+			:expand-all="expandAll"
+			@deleteResultGroup="(groupId) => $delete(results, groupId)"
+		/>
 	</div>
 </template>
 
@@ -204,13 +53,10 @@ import axios from 'axios';
 import logger from 'utilities/logger';
 import AddConnection from './AddConnection/index';
 import SearchBar from './SearchBar';
-import ConfirmSearchModal from './ConfirmSearchModal';
 import SearchErrors from './SearchErrors';
 import SearchStats from './SearchStats';
 import SearchLoader from './SearchLoader';
-import SearchResult from './SearchResult/index';
-import Avatar from 'components/shared/Avatar/index';
-import RestoreCard from 'components/shared/RestoreCard/index';
+import SearchResultList from './SearchResultList';
 
 export default {
 	name: 'TabPanel',
@@ -247,29 +93,10 @@ export default {
 			resultsCount: 0,
 			someHaveMore: false,
 			expandAll: false,
-			queryTime: 0,
-			projectsHidden: [],
-			groupsHidden: []
+			queryTime: 0
 		};
 	},
 	computed: {
-		/**
-		 * Simply counts how many projects we have to search from (i.e. not filtered out)
-		 *
-		 * @returns {Int} - the number of projects in our list of searchable projects
-		 */
-		projectCount() {
-			let count = 0;
-
-			for (const projectArr of Object.values(this.projects)) {
-				if (projectArr) {
-					count += projectArr.length;
-				}
-			}
-
-			return count;
-		},
-
 		/**
 		 * Filters our search results based on which projects we should actually be showing.This is useful because it means we don't have to
 		 * re-execute a search against all unfiltered projects each time that a user adds or removes a project or group from the filters.
@@ -327,30 +154,32 @@ export default {
 	},
 	methods: {
 		/**
-		 * Simply modifies our URL search query param, which triggers a search
+		 * A convenience for grabbing ALL data of a project
 		 *
-		 * @param {Boolean} confirmed - whether or not we've already warned this user about their small search query
+		 * @param {Int|String} projectId - the ID of the project whose data you want
 		 */
-		initiateSearch(confirmed) {
-			if (this.searchQuery.length < 4 && !confirmed) {
-				// If the user is attempting a really small query, then I'd really rather warn them of the consequences
-				this.confirmQuery = true;
+		getProjectByIds(projectId) {
+			return this.$store.Project.project(this.conn.index, projectId);
+		},
+
+		/**
+		 * Simply modifies our URL search query param, which triggers a search
+		 */
+		initiateSearch() {
+			// Update our URL, which will trigger a search
+			const routeQuery = {
+				...this.$route.query
+			};
+			routeQuery.search = this.searchQuery;
+
+			if (this.searchBranch === '') {
+				// If they've reverted to clearing the branch name, then we revert to simply clearing this from the URL so that we search by repo default branch
+				delete routeQuery.branch;
 			} else {
-				// Update our URL, which will trigger a search
-				const routeQuery = {
-					...this.$route.query
-				};
-				routeQuery.search = this.searchQuery;
-
-				if (this.searchBranch === '') {
-					// If they've reverted to clearing the branch name, then we revert to simply clearing this from the URL so that we search by repo default branch
-					delete routeQuery.branch;
-				} else {
-					routeQuery.branch = this.searchBranch;
-				}
-
-				this.$router.push({ path: this.$route.path, query: routeQuery });
+				routeQuery.branch = this.searchBranch;
 			}
+
+			this.$router.push({ path: this.$route.path, query: routeQuery });
 		},
 
 		/**
@@ -409,6 +238,7 @@ export default {
 											for (let i = 0; i < this.results[groupId][project.id].length; i++) {
 												const result = this.results[groupId][project.id][i];
 
+												// Yes, this is the Gitlab convention for accessing a single file in the branch
 												result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
 
 												// Find out file extensions for syntax highlighting later on
@@ -487,24 +317,6 @@ export default {
 		},
 
 		/**
-		 * A convenience for grabbing ALL data of a group
-		 *
-		 * @param {Int|String} groupId - the ID of the group whose data you want
-		 */
-		getGroupById(groupId) {
-			return this.groups.find((group) => group.id === +groupId);
-		},
-
-		/**
-		 * A convenience for grabbing ALL data of a project
-		 *
-		 * @param {Int|String} projectId - the ID of the project whose data you want
-		 */
-		getProjectByIds(projectId) {
-			return this.$store.Project.project(this.conn.index, projectId);
-		},
-
-		/**
 		 * Helps us determine whether we need to actually re-execute a search. Looks at what projects we've already queried vs which we still need to query to find out the difference.
 		 *
 		 * @param {Object} projects - the list (technically) of projects that we've been notified we want searches of.
@@ -569,6 +381,7 @@ export default {
 					for (let i = 0; i < this.results[groupId][projectId].length; i++) {
 						const result = this.results[groupId][projectId][i];
 
+						// Yes, this is the Gitlab convention for accessing a single file in the branch
 						result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
 
 						// Find out file extensions for syntax highlighting later on
@@ -602,91 +415,6 @@ export default {
 
 			// Turn off the loading animation
 			this.$set(this.projectsQueried[projectId], 'loading', false);
-		},
-
-		/**
-		 * Marks as hidden the entry/project/group indicated in its parameters.
-		 * Is a kind of overloaded function - if passed only `groupId`, then it hides a group; if passed `groupId` and `projectId`, then it hides a project; if passed all 3 parameters, then it hides a single search result entry.
-		 *
-		 * @param {Int|String} groupId - the ID of the group in which we want to hide something
-		 * @param {Int|String} projectId - (optional) the ID of the project in which we want to hide something
-		 * @param {Int|String} resultIdx - (optional) the index (in the project results array) of the entry that we want to hide
-		 */
-		hideResults(groupId, projectId, resultIdx) {
-			const group = this.results[+groupId];
-			const project = group[+projectId];
-
-			if (!project) {
-				// No project ID passed, hide the group!
-				this.groupsHidden.push(+groupId); // We have to track this in a separate array group doesn't end up in projectToShow
-
-				window.setTimeout(() => {
-					if (this.groupsHidden.indexOf(+groupId) !== -1) {
-						// Grace period is past - just go ahead and delete the whole group from the results
-						this.$delete(this.results, +groupId);
-					}
-				}, 10000);
-			} else {
-				const result = project[+resultIdx];
-
-				if (!result) {
-					// No legit result index passed, hide the project!
-					this.projectsHidden.push(+projectId); // We have to track this in a separate array because project is an array
-
-					window.setTimeout(() => {
-						if (this.projectsHidden.indexOf(+projectId) !== -1) {
-							// Grace period is past - just go ahead and delete the whole project from the results
-							this.$delete(group, +projectId);
-						}
-					}, 10000);
-				} else {
-					// All right, just a single result hidden
-					this.$set(result, 'hidden', true);
-
-					window.setTimeout(() => {
-						if (result.hidden) {
-							// Grace period is past - just go ahead and delete it from the results
-							this.$delete(project, +resultIdx);
-						}
-					}, 5000);
-				}
-			}
-		},
-
-		/**
-		 * Marks as no longer hidden the entry/project/group indicated in its parameters.
-		 * Is a kind of overloaded function - if passed only `groupId`, then it restores a group; if passed `groupId` and `projectId`, then it restores a project; if passed all 3 parameters, then it restores a single search result entry.
-		 *
-		 * @param {Int|String} groupId - the ID of the group in which we want to restore something
-		 * @param {Int|String} projectId - (optional) the ID of the project in which we want to restore something
-		 * @param {Int|String} resultIdx - (optional) the index (in the project results array) of the entry that we want to restore
-		 */
-		restoreResults(groupId, projectId, resultIdx) {
-			const group = this.results[+groupId];
-			const project = group[+projectId];
-
-			if (!project) {
-				// No project ID passed, they must want to restore the group
-				const groupIdx = this.groupsHidden.indexOf(+groupId);
-
-				if (groupIdx > -1) {
-					this.groupsHidden.splice(groupIdx, 1);
-				}
-			} else {
-				const result = project[+resultIdx];
-
-				if (!result) {
-					// No legit result index passed, they must want to restore the project
-					const projectIdx = this.projectsHidden.indexOf(+projectId);
-
-					if (projectIdx > -1) {
-						this.projectsHidden.splice(projectIdx, 1);
-					}
-				} else {
-					// All right, just a single result to restore
-					this.$set(result, 'hidden', false);
-				}
-			}
 		},
 
 		/**
@@ -735,64 +463,15 @@ export default {
 				// Re-execute the search every time the list of filtered projects changes
 				this.executeSearch(needs);
 			}
-		},
-		/**
-		 * If the user clicked on expand/collapse all, we use this to find all expansion items in the results and update their state
-		 *
-		 * @param {Boolean} newVal - the updated state; `true` for expand, `false` for collapse
-		 */
-		expandAll: {
-			handler(newVal) {
-				for (const expansionItem of this.$refs.parentList.$children) {
-					// Expand/Collapse all of the group-level lines
-					if (newVal) {
-						expansionItem.show();
-					} else {
-						expansionItem.hide();
-					}
-
-					// Also search through all of the projects inside of each group and expand/collapse them
-					for (const childItem of expansionItem.$children[1].$children[1].$children) {
-						if (newVal) {
-							childItem.show();
-						} else {
-							childItem.hide();
-						}
-					}
-				}
-			}
 		}
 	},
 	components: {
 		AddConnection,
 		SearchBar,
-		ConfirmSearchModal,
 		SearchErrors,
 		SearchStats,
 		SearchLoader,
-		SearchResult,
-		Avatar,
-		RestoreCard
+		SearchResultList
 	}
 };
 </script>
-
-<style lang="scss">
-.expansion-inset {
-	padding-left: 12px;
-
-	&__name {
-		flex-direction: row;
-		justify-content: flex-start;
-		align-content: center;
-	}
-}
-
-// Just for Vue transitions
-.fade-leave-active {
-	transition: opacity 0.5s;
-}
-.fade-leave-to {
-	opacity: 0;
-}
-</style>
