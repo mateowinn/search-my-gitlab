@@ -184,6 +184,12 @@ export default {
 		expandAll: {
 			type: Boolean,
 			default: false
+		},
+		loadMore: {
+			type: Function,
+			default: () => {
+				// Nothing, I guess
+			}
 		}
 	},
 	data() {

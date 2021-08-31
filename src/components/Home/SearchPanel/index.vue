@@ -43,6 +43,7 @@
 			:get-project-by-ids="getProjectByIds"
 			:search-query="searchQuery"
 			:expand-all="expandAll"
+			:load-more="loadMore"
 			@deleteResultGroup="(groupId) => $delete(results, groupId)"
 		/>
 	</div>
