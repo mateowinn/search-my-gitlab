@@ -95,7 +95,7 @@ const Project = new Vue({
 						results.push({
 							id: +project.id.split('gid://gitlab/Project/')[1],
 							name: project.name,
-							defaultBranch: project.repository.rootRef,
+							defaultBranch: project.repository ? project.repository.rootRef : '',
 							webUrl: project.webUrl,
 							avatarUrl: this.getFullAvatarUrl(project.avatarUrl, conn),
 							archived: project.archived,

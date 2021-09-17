@@ -33,8 +33,8 @@
 
 			<div class="doc-note doc-note--warning q-mt-xl">
 				<span
-					><strong>Warning:</strong> Access tokens are credentials, which can grant access to resources. Be careful where you paste them! We
-					do not record tokens; all validation and searching is done between the client and your own Gitlab host.</span
+					><strong>Note:</strong> Access tokens are credentials, which can grant access to resources. Be careful where you paste them! We do
+					not record tokens; all validation and searching is done between the client and your own Gitlab host.</span
 				>
 			</div>
 		</div>
@@ -92,7 +92,7 @@
 							>Gitlab docs</a
 						>
 						for instructions to create a token with the
-						<code>read_api</code> scope
+						<code>api</code> scope
 					</div>
 				</template>
 			</q-input>
@@ -155,6 +155,7 @@ export default {
 		 */
 		async onSubmit() {
 			this.loading = true;
+			console.log('Trying to add connection', this.domain, this.token);
 
 			// Make sure that we don't have any other slashes that we shouldn't
 			if ((this.domain.match(/\//g) || []).length > 2) {
@@ -164,13 +165,16 @@ export default {
 			// Pass them onto our store
 			const response = await this.$store.Connection.createConn(this.domain, this.token);
 
+			console.log('Response', response);
+
 			if (response.error) {
 				switch (response.error) {
 					case 'UNAUTHORIZED':
 						this.error =
-							'The access token provided does not have the proper permissions. Please make sure you provide a token with the "read_api" scope.';
+							'The access token provided does not have the proper permissions. Please make sure you provide a token with the "<code>api</code>" scope.';
 						break;
 					case 'UNAUTHENTICATED':
+					case 'NO_DATA':
 						this.error =
 							'The access token provided is invalid. Check the token you\'ve entered or review the <a href="https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#creating-a-personal-access-token" target="_blank">Gitlab docs</a> and try again.';
 						break;
