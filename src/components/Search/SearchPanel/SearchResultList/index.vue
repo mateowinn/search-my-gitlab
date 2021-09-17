@@ -217,7 +217,6 @@ export default {
 		 * @param {Int|String} resultIdx - (optional) the index (in the project results array) of the entry that we want to hide
 		 */
 		hideResults(groupId, projectId, resultIdx) {
-			console.log('hiding', groupId, projectId, resultIdx);
 			const group = this.results[+groupId];
 			const project = group[+projectId];
 

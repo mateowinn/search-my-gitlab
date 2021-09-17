@@ -155,7 +155,6 @@ export default {
 		 */
 		async onSubmit() {
 			this.loading = true;
-			console.log('Trying to add connection', this.domain, this.token);
 
 			// Make sure that we don't have any other slashes that we shouldn't
 			if ((this.domain.match(/\//g) || []).length > 2) {
@@ -164,8 +163,6 @@ export default {
 
 			// Pass them onto our store
 			const response = await this.$store.Connection.createConn(this.domain, this.token);
-
-			console.log('Response', response);
 
 			if (response.error) {
 				switch (response.error) {

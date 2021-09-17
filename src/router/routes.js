@@ -1,5 +1,5 @@
 const routes = [
-	// These are at the top because the Home page uses dynamic path parameters.
+	// These are at the top because the Home/Search page uses dynamic path parameters.
 	// About page
 	{
 		path: '/about',
@@ -26,8 +26,8 @@ const routes = [
 		path: '/search',
 		component: () => import('layouts/MainLayout.vue'),
 		children: [
-			{ path: ':domain', component: () => import('src/pages/Home/index.vue') },
-			{ name: 'Search', path: '', component: () => import('src/pages/Home/index.vue') }
+			{ path: ':domain', component: () => import('src/pages/Search/index.vue') },
+			{ name: 'Search', path: '', component: () => import('src/pages/Search/index.vue') }
 		]
 	},
 
