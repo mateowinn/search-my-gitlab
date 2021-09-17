@@ -16,7 +16,7 @@
 				Yeah? So?
 			</h2>
 			<p>
-				In the off-chance that you <i>didn't</i> already read the home page description,
+				In the off-chance that you <i>didn't</i> already read the main page description,
 				<strong class="text-secondary">Search My Gitlab</strong> is a tool I built to allow you (if you're nice!) to search <i>all</i> of your
 				Gitlab repositories at the same time - for <strong>free</strong>. No more paying extra for subscriptions and AWS services. No more
 				devoting hours to scouring <i>every</i> single repo in <i>every</i> single group <span style="font-size:20px;">&#128553;</span>.

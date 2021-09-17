@@ -63,14 +63,14 @@
 </template>
 
 <script>
-import SearchPanel from 'src/components/Home/SearchPanel/index';
-import FilterDrawer from 'src/components/Home/FilterDrawer/index';
+import SearchPanel from 'src/components/Search/SearchPanel/index';
+import FilterDrawer from 'src/components/Search/FilterDrawer/index';
 import ErrorDialog from 'src/components/shared/ErrorDialog/index';
 
 const arrayProto = Object.prototype.toString.call([]);
 
 export default {
-	name: 'Home',
+	name: 'Search',
 	data() {
 		return {
 			filterDrawerOpen: false,
