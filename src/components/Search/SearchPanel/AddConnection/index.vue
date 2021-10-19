@@ -120,7 +120,6 @@
 </template>
 
 <script>
-import ErrorDialog from 'src/components/shared/ErrorDialog/index';
 import SearchMyGitlabLogo from 'src/components/shared/SearchMyGitlabLogo/index';
 
 export default {
@@ -202,7 +201,7 @@ export default {
 	},
 
 	components: {
-		ErrorDialog,
+		ErrorDialog: () => import(/* webpackChunkName: "ErrorDialog" */ 'components/shared/ErrorDialog'),
 		SearchMyGitlabLogo
 	}
 };

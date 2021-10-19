@@ -63,10 +63,6 @@
 </template>
 
 <script>
-import SearchPanel from 'src/components/Search/SearchPanel/index';
-import FilterDrawer from 'src/components/Search/FilterDrawer/index';
-import ErrorDialog from 'src/components/shared/ErrorDialog/index';
-
 const arrayProto = Object.prototype.toString.call([]);
 
 export default {
@@ -455,11 +451,6 @@ export default {
 			}
 		}
 	},
-	components: {
-		SearchPanel,
-		FilterDrawer,
-		ErrorDialog
-	},
 
 	/**
 	 * Gets our query param (and therefore our focused tab) started on the right foot
@@ -479,6 +470,12 @@ export default {
 				this.navigateToDomain('add');
 			}
 		}
+	},
+
+	components: {
+		SearchPanel: () => import(/* webpackChunkName: "SearchPanel" */ 'components/Search/SearchPanel'),
+		FilterDrawer: () => import(/* webpackChunkName: "FilterDrawer" */ 'components/Search/FilterDrawer'),
+		ErrorDialog: () => import(/* webpackChunkName: "ErrorDialog" */ 'components/shared/ErrorDialog')
 	}
 };
 </script>
