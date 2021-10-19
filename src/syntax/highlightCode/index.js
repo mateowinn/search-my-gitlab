@@ -1,16 +1,10 @@
-import { javascript, json, generic, yaml } from '../languages';
+import logger from 'utilities/logger';
 
-// Defines all language patterns we accept and the extension aliases we expect
-const langPatterns = {
-	js: javascript,
-	javascript,
-	json,
-	jsonc: json,
-	generic,
-	example: generic,
-	yaml,
-	yml: yaml
-};
+// A flag to simply indicate if we can support syntax highlighting
+let syntaxHighlightingOn = false;
+
+// Defines all language patterns we accept and the extension aliases we expect (will be filled out later after we've checked browser compatibility)
+const langPatterns = {};
 
 const SPAN_PATTERN = /\<span data-highlighted.*?\<\/span\>/gs;
 
@@ -87,4 +81,58 @@ export default function highlightCode(str, ext) {
 	}
 
 	return highlighted;
+}
+
+/**
+ * It, uh, just returns whether syntax highlighting is on, in case you didn't get that.
+ *
+ * @returns {Boolean}
+ */
+export function canSyntaxHighlight() {
+	console.log('Returning can');
+	return syntaxHighlightingOn;
+}
+
+/**
+ * A simple function that tells whether the user's browser supports positive lookbehinds in Regex
+ * (StackOverflow: https://stackoverflow.com/questions/60325323/how-to-test-to-determine-if-browser-supports-js-regex-lookahead-lookbehind#answer-65896524)
+ *
+ * And yes, in case you were wondering, this is all Safari's fault.
+ *
+ * @returns {Boolean} - whether or not positive lookbehinds are supported in this browser
+ */
+function supportsRegexLookAheadLookBehind() {
+	try {
+		return 'hibyehihi'.replace(new RegExp('(?<=hi)hi', 'g'), 'hello').replace(new RegExp('hi(?!bye)', 'g'), 'hey') === 'hibyeheyhello';
+	} catch (error) {
+		return false;
+	}
+}
+
+if (supportsRegexLookAheadLookBehind()) {
+	// Woo-hoo! We can support syntax highlighting!
+	syntaxHighlightingOn = true;
+
+	// Now import our actual highlighting rules
+	import('../languages')
+		.then((languages) => {
+			const { javascript, json, generic, yaml } = languages;
+
+			// Pre-populate the syntax language options
+			langPatterns.js = javascript;
+			langPatterns.javascript = javascript;
+			langPatterns.json = json;
+			langPatterns.jsonc = json;
+			langPatterns.generic = generic;
+			langPatterns.example = generic;
+			langPatterns.yaml = yaml;
+			langPatterns.yml = yaml;
+		})
+		.catch((error) => {
+			syntaxHighlightingOn = false;
+
+			logger.error('Shoot. Could not dynamically load language patterns. Syntax highlighting disabled!', error);
+		});
+} else {
+	logger.warn('Browser does not support positive lookbehinds in Regex. Syntax highlighting disabled!');
 }

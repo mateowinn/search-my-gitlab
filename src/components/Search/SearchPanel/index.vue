@@ -26,6 +26,9 @@
 			:expand-all="expandAll"
 		/>
 
+		<!-- A small card that shows when syntax highlighting is unavailable because the browser sucks -->
+		<HighlightingUnavailable />
+
 		<!-- Loading bar and messages for *searches* -->
 		<SearchLoader v-if="loading" :projects-queried="projectsQueried" :query-time="queryTime" />
 
@@ -472,7 +475,9 @@ export default {
 		SearchErrors,
 		SearchStats,
 		SearchLoader,
-		SearchResultList
+		SearchResultList,
+		HighlightingUnavailable: () =>
+			import(/* webpackChunkName: "HighlightingUnavailable" */ 'components/Search/SearchPanel/HighlightingUnavailable')
 	}
 };
 </script>
