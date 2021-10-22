@@ -92,7 +92,7 @@
 							>Gitlab docs</a
 						>
 						for instructions to create a token with the
-						<code>api</code> scope
+						<b><code>read_api</code></b> scope
 					</div>
 				</template>
 			</q-input>
@@ -167,7 +167,7 @@ export default {
 				switch (response.error) {
 					case 'UNAUTHORIZED':
 						this.error =
-							'The access token provided does not have the proper permissions. Please make sure you provide a token with the "<code>api</code>" scope.';
+							'The access token provided does not have the proper permissions. Please make sure you provide a token with the "<b><code>read_api</code></b>" scope.';
 						break;
 					case 'UNAUTHENTICATED':
 					case 'NO_DATA':

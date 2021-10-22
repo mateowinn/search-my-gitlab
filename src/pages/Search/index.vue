@@ -441,6 +441,7 @@ export default {
 		 * Allows us to track when we're in the middle of loading project metadata so that we can show an animation
 		 */
 		currentProjects: {
+			immediate: true,
 			handler(currentVal) {
 				if ((!currentVal || currentVal.length === 0) && this.tabIndex !== 'add' && !this.error) {
 					// Looks like we're still loading

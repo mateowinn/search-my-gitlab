@@ -89,7 +89,6 @@ export default function highlightCode(str, ext) {
  * @returns {Boolean}
  */
 export function canSyntaxHighlight() {
-	console.log('Returning can');
 	return syntaxHighlightingOn;
 }
 

@@ -1,7 +1,10 @@
 import Vue from 'vue';
 import logger from 'utilities/logger';
-import axios from 'axios';
 import cloneObj from 'utilities/cloneObj';
+import ApolloClients from '../Client';
+
+// Our query definitions
+import GET_PROJECTS_BY_PAGE from 'queries/getProjectsByPage.gql';
 
 // Our Project data definitions
 const projectData = {
@@ -57,38 +60,52 @@ const Project = new Vue({
 		 *
 		 * @param {Connection} conn - the particular connection we should fetch projects from
 		 * @param {Array<Project>} results - an array of the aggregated results we've received. We keep track of this so that we can load all of our projects at once in the end.
-		 * @param {Int} page - the page (of 100s) that we should be fetching this time around
+		 * @param {String} lastCursor - the unique token Gitlab gives us to send if there are more projects to be fetched
 		 */
-		fetchProjectsByPage(conn, results = [], page = 1) {
-			axios({
-				method: 'get',
-				headers: {
-					'Private-Token': conn.token
-				},
-				url: `${conn.domain}/api/v4/projects?membership=true&per_page=100&page=${page}`
-			})
+		fetchProjectsByPage(conn, results = [], lastCursor) {
+			const apolloClient = ApolloClients.client(conn);
+
+			apolloClient
+				.query({
+					query: GET_PROJECTS_BY_PAGE,
+					variables: {
+						membership: true,
+						first: 100,
+						after: lastCursor
+					}
+				})
 				.then((response) => {
 					// Update our running list with these projects, but filter them first
-					for (const project of response.data) {
+					for (const project of response.data.projects.nodes) {
+						// We need to figure out if we actually got a group or if we only have a namespace (which will have to be our substitute)
+						const group = {};
+						if (project.group && project.group.id) {
+							group.id = +project.group.id.split('gid://gitlab/Group/')[1];
+							group.name = project.group.name;
+							group.webUrl = project.group.webUrl;
+							group.avatarUrl = this.getFullAvatarUrl(project.group.avatarUrl, conn);
+						} else if (project.namespace && project.namespace.id) {
+							group.id = +project.namespace.id.split('gid://gitlab/Namespace/')[1];
+							group.name = project.namespace.name;
+							group.webUrl = `${conn.domain}/${project.namespace.fullPath}`;
+							group.avatarUrl = null;
+						}
+
+						// Add the filtered projection to our running list
 						results.push({
-							id: project.id,
+							id: +project.id.split('gid://gitlab/Project/')[1],
 							name: project.name,
-							defaultBranch: project.default_branch || '',
-							webUrl: project.web_url,
-							avatarUrl: this.getFullAvatarUrl(project.avatar_url, conn),
+							defaultBranch: project.repository ? project.repository.rootRef : '',
+							webUrl: project.webUrl,
+							avatarUrl: this.getFullAvatarUrl(project.avatarUrl, conn),
 							archived: project.archived,
-							group: {
-								id: project.namespace.id,
-								name: project.namespace.name,
-								webUrl: project.namespace.web_url,
-								avatarUrl: this.getFullAvatarUrl(project.namespace.avatar_url, conn)
-							}
+							group
 						});
 					}
 
 					// Run this again and again if we detect that there may be more projects
-					if (response.data.length === 100) {
-						this.fetchProjectsByPage(conn, results, page + 1);
+					if (response.data.projects.pageInfo.hasNextPage) {
+						this.fetchProjectsByPage(conn, results, response.data.projects.pageInfo.endCursor);
 					} else {
 						this.$set(this.allProjects, conn.index, results);
 					}
@@ -100,17 +117,20 @@ const Project = new Vue({
 						// Perhaps they need to be on a specific network?
 						code = 'BAD_REQUEST';
 					}
-					this.$set(this.pageErrors[conn.index], page, code);
+					this.$set(this.pageErrors[conn.index], lastCursor, code);
 
 					logger.error(
 						{
 							error: e,
 							connection: conn.index,
-							page,
+							lastCursor,
 							code
 						},
-						'Failed to get projects with specified connection and page'
+						'Failed to get projects with specified connection and cursor location'
 					);
+
+					// Be sure to set whatever we can! Or the user won't get anything at all.
+					this.$set(this.allProjects, conn.index, results);
 				});
 		},
 
