@@ -1,12 +1,12 @@
 import Vue from 'vue';
 
 import Connection from 'src/store/Connection';
-import Client from 'src/store/Client';
+// import Client from 'src/store/Client';
 import Project from 'src/store/Project';
 
 Vue.prototype.$store = {
 	Connection,
-	Client,
+	// Client,
 	Project
 };
 
