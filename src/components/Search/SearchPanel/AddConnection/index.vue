@@ -33,11 +33,44 @@
 
 			<div class="doc-note doc-note--warning q-mt-xl">
 				<span
-					><strong>Note:</strong> Access tokens are credentials, which can grant access to resources. Be careful where you paste them! We do
-					not record tokens; all validation and searching is done between the client and your own Gitlab host.</span
+					><strong>Note:</strong> We do not record tokens; all validation and searching is done between the client and your own Gitlab host.
+					<a href="#" @click.prevent.stop="explainModalOpen = true">Why can't I just sign in with Gitlab?</a></span
 				>
 			</div>
 		</div>
+
+		<!-- First pop-up is just for further explaining why users can't sign in with Gitlab -->
+		<q-dialog v-model="explainModalOpen">
+			<q-card>
+				<q-card-section>
+					Unfortunately, there are two major problems right now with Gitlab application OAuth:
+					<ul>
+						<li>
+							Being <i>relatively</i> new, OAuth application integration still has a whole host of
+							<a
+								href="https://gitlab.com/gitlab-org/gitlab/-/issues?page=3&scope=all&search=oauth+application&state=opened"
+								target="_blank"
+								>bugs to work out</a
+							>, including
+							<a href="https://gitlab.com/gitlab-org/gitlab/-/issues/343102" target="_blank">user access permission issues</a> and an
+							<a href="https://gitlab.com/gitlab-org/gitlab/-/issues/336598" target="_blank">inability to revoke access immediately</a>.
+						</li>
+						<li>
+							All OAuth application integrations are done on a user, group, or instance-wide level. What does this mean for you?
+							<strong class="text-secondary">Search My Gitlab</strong> can't be configured once as an acceptable OAuth-integrated client
+							with Gitlab and suddenly work for everyone. It actually has to be setup for every user's account, and still necessitates
+							the exchanging of secrets/tokens to work anyways. Going the route of personal access tokens is faster and just as safe at
+							this time. Perhaps someday we'll do the extra work of allowing account administrators to setup OAuth applications with
+							<strong class="text-secondary">Search My Gitlab</strong> so that all users of a Gitlab instance can just sign in with
+							their Gitlab credentials, but today is not that day! (see
+							<a href="https://docs.gitlab.com/ee/integration/oauth_provider.html" target="_blank"
+								>Configure GitLab as an OAuth 2.0 authentication identity provider</a
+							>)
+						</li>
+					</ul>
+				</q-card-section>
+			</q-card>
+		</q-dialog>
 
 		<!-- A pop-up dialog we can use for telling the user what happened in event of error -->
 		<ErrorDialog :error="error" :hide="() => (error = '')" :action-label="'Let me retry'" />
@@ -137,7 +170,8 @@ export default {
 			token: '',
 			loading: false,
 			newIndex: null,
-			error: ''
+			error: '',
+			explainModalOpen: false
 		};
 	},
 	computed: {
