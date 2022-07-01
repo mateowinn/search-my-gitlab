@@ -1,0 +1,135 @@
+/**
+ * prism.js Coy theme for JavaScript, CoffeeScript, CSS and HTML
+ * Based on https://github.com/tshedor/workshop-wp-theme (Example: http://workshop.kansan.com/category/sessions/basics or http://workshop.timshedor.com/category/sessions/basics);
+ * @author Tim  Shedor
+ * Modified by mateowinn
+ */
+.code-theme-coy {
+	code[class*='language-'] {
+		color: black;
+		background: none;
+		font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+		font-size: 1em;
+		text-align: left;
+		white-space: pre;
+		word-spacing: normal;
+		word-break: normal;
+		word-wrap: normal;
+		margin: 0;
+		display: block;
+		position: relative;
+
+		-moz-tab-size: 4;
+		-o-tab-size: 4;
+		tab-size: 4;
+
+		-webkit-hyphens: none;
+		-moz-hyphens: none;
+		-ms-hyphens: none;
+		hyphens: none;
+	}
+
+	.code-line {
+		&-canvas {
+			color: black;
+			position: relative;
+			color: #c92c2c;
+			z-index: 1;
+			border-left: 10px solid #358ccb;
+			background-color: #fdfdfd;
+			background-image: linear-gradient(transparent 50%, rgba(69, 142, 209, 0.08) 50%);
+			background-size: 4.15em 4.15em;
+			background-origin: content-box;
+			background-attachment: local;
+			-webkit-box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			box-sizing: border-box;
+		}
+
+		&__number {
+			color: black;
+		}
+
+		&__match {
+			// Background highlighting for the matching term in this theme just...doesn't.
+			box-shadow: 0pt 0pt 2pt 0px #358ccb;
+			border-collapse: collapse;
+		}
+	}
+
+	.token.comment,
+	.token.block-comment,
+	.token.prolog,
+	.token.doctype,
+	.token.cdata {
+		color: #7d8b99;
+	}
+
+	.token.punctuation {
+		color: #5f6364;
+	}
+
+	.token.property,
+	.token.tag,
+	.token.boolean,
+	.token.number,
+	.token.function-name,
+	.token.constant,
+	.token.symbol,
+	.token.deleted {
+		color: #c92c2c;
+	}
+
+	.token.selector,
+	.token.attr-name,
+	.token.string,
+	.token.char,
+	.token.function,
+	.token.builtin,
+	.token.inserted {
+		color: #2f9c0a;
+	}
+
+	.token.operator,
+	.token.entity,
+	.token.url,
+	.token.variable {
+		color: #a67f59;
+	}
+
+	.token.atrule,
+	.token.attr-value,
+	.token.keyword,
+	.token.class-name {
+		color: #1990b8;
+	}
+
+	.token.regex,
+	.token.important {
+		color: #e90;
+	}
+
+	.language-css .token.string,
+	.style .token.string {
+		color: #a67f59;
+	}
+
+	.token.important {
+		font-weight: normal;
+	}
+
+	.token.bold {
+		font-weight: bold;
+	}
+	.token.italic {
+		font-style: italic;
+	}
+
+	.token.entity {
+		cursor: help;
+	}
+
+	.token.namespace {
+		opacity: 0.7;
+	}
+}

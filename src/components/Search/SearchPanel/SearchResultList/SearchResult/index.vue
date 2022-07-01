@@ -46,17 +46,17 @@
 		<!-- The actual code contents and line numbers -->
 		<q-slide-transition>
 			<div v-show="expanded">
-				<q-card-section horizontal class="q-pa-xs bg-black text-white">
+				<q-card-section horizontal class="q-pa-xs code-line-canvas">
 					<!-- This section simply shows line numbers alongside a link that allows the user to jump straight to that line in Gitlab -->
 					<q-card-section class="q-pa-none">
 						<a
-							v-for="(piece, index) of highlightedPieces"
+							v-for="(piece, index) of escapedPieces"
 							:key="`result-${result.project_id}-${result.index}-line-${index}`"
 							:href="`${result.url}#L${result.startline + index}`"
 							target="_blank"
 							class="code-line code-line__number"
 						>
-							<p class="q-mb-none q-pa-xs q-px-sm">
+							<p class="q-mb-none q-pa-xs">
 								<q-icon name="link" size="xs" class="q-pr-xs" />
 
 								<span>{{ result.startline + index }}</span>
@@ -68,17 +68,18 @@
 					<q-separator vertical dark />
 
 					<!-- This is the section that actually has the code in its divided lines -->
-					<q-card-section class="q-pa-none code-line-container" style="overflow-x:auto;white-space: nowrap;">
+					<q-card-section class="q-pa-none code-line-container">
 						<!-- Additional classes are added to the lines that we detect actually contain the search query -->
-						<pre
-							v-for="(piece, index) of highlightedPieces"
+						<code
+							v-for="(piece, index) of escapedPieces"
 							:key="`result-${result.project_id}-${result.index}-text-${index}`"
-							class="q-mb-none q-pa-xs q-px-sm code-line"
+							class="q-mb-none q-pa-xs code-line"
 							:class="{
-								'bg-grey-9': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
+								[`language-${result.ext}`]: true,
+								'code-line__match': piece && piece.toLowerCase().includes(searchQuery.toLowerCase())
 							}"
 							v-html="piece || '&nbsp;'"
-						></pre>
+						></code>
 					</q-card-section>
 				</q-card-section>
 			</div>
@@ -87,7 +88,6 @@
 </template>
 
 <script>
-import highlightCode from 'src/syntax/highlightCode';
 import RestoreCard from 'components/shared/RestoreCard/index';
 
 export default {
@@ -133,13 +133,12 @@ export default {
 	},
 	computed: {
 		/**
-		 * Hands off the string of code to a utility function that injects highlight spans so that we can show syntax-highlighted code wherever possible
+		 * Simply handles converting the result text into escaped HTML so we don't inject ourselves
 		 *
-		 * @returns {String} - the search result, possibly highlighted
+		 * @returns {String} - the search result, escaped
 		 */
-		highlightedData() {
-			const highlighted = highlightCode(this.result.data, this.result.ext);
-			return highlighted;
+		escapedData() {
+			return this.escapeHtml(this.result.data);
 		},
 
 		/**
@@ -147,22 +146,32 @@ export default {
 		 *
 		 * @returns {Array<String>} - a list of code lines to display, divided by newline characters
 		 */
-		highlightedPieces() {
-			const pieces = this.highlightedData.split('\n');
-
-			for (let i = pieces.length - 1; i > -1; i--) {
-				// Our highlighting process sometimes closes its spans on different lines
-				if (pieces[i] && pieces[i].startsWith('</span>')) {
-					pieces[i - 1] += '</span>';
-					pieces[i] = pieces[i].substr(7, pieces[i].length - 1);
-				}
-			}
+		escapedPieces() {
+			const pieces = this.escapedData.split('\n');
 
 			// We often get blank lines at the end (don't know why), so let's filter those out
 			if (!pieces[pieces.length - 1]) {
 				pieces.splice(pieces.length - 1, 1);
 			}
 			return pieces;
+		}
+	},
+	methods: {
+		/**
+		 * Takes an HTML string and escapes the special characters that could potentially be used in an attack
+		 *
+		 * @param {String} html - the HTML string that could potentially contain harmful characters if rendered literally
+		 * @returns {String} - an escaped HTML string
+		 */
+		escapeHtml(html) {
+			const p = document.createElement('p');
+			const text = document.createTextNode(html);
+
+			// The DOM already knows how to parse/escape HTML
+			p.appendChild(text);
+
+			// This should automatically put `p` and `text` out of scope and therefore garbage collected
+			return p.innerHTML;
 		}
 	},
 	watch: {
@@ -177,19 +186,29 @@ export default {
 	},
 	components: {
 		RestoreCard
+	},
+	mounted() {
+		// As soon as this is rendered, call the highlight function to highlight syntax
+		window.Prism.highlightAllUnder(document.getElementById(`result-${this.result.project_id}-${this.result.index}`));
 	}
 };
 </script>
 
 <style lang="scss">
-.code-line,
-.code-line-container {
-	width: 100%;
-}
-
 .code-line {
+	width: 100%;
+
+	&-container {
+		margin: 0;
+		padding: 0;
+		overflow-x: auto;
+		white-space: nowrap;
+		width: 100%;
+		// Strangely, this is the only way to allow individual line highlighting to extend the entire length of the scrollable parent
+		display: grid;
+	}
+
 	&__number {
-		color: white !important;
 		text-decoration: none;
 
 		& > p {

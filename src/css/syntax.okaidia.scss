@@ -1,10 +1,13 @@
 /**
- * Based on the Monokai theme for JavaScript, CSS and HTML
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ * Modified by mateowinn
  */
-
-.code-theme-monokai {
+.code-theme-okaidia {
 	code[class*='language-'] {
-		font-family: 'Monaco', 'Menlo', courier, monospace;
+		text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+		font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
 		font-size: 1em;
 		text-align: left;
 		white-space: pre;
@@ -27,12 +30,12 @@
 
 	.code-line {
 		&-canvas {
-			color: #fff;
-			background: #000;
+			color: #f8f8f2;
+			background: #272822;
 		}
 
 		&__number {
-			color: #fff;
+			color: #f8f8f2;
 		}
 
 		&__match {
@@ -41,15 +44,13 @@
 	}
 
 	.token.comment,
-	.token.hashbang,
 	.token.prolog,
 	.token.doctype,
 	.token.cdata {
-		color: #75715e;
+		color: #8292a2;
 	}
 
-	.token.punctuation,
-	.token.constant {
+	.token.punctuation {
 		color: #f8f8f2;
 	}
 
@@ -59,10 +60,10 @@
 
 	.token.property,
 	.token.tag,
+	.token.constant,
 	.token.symbol,
-	.token.deleted,
-	.token.variable {
-		color: #66d9ef;
+	.token.deleted {
+		color: #f92672;
 	}
 
 	.token.boolean,
@@ -76,26 +77,27 @@
 	.token.char,
 	.token.builtin,
 	.token.inserted {
-		color: #e6db74;
+		color: #a6e22e;
 	}
 
 	.token.operator,
 	.token.entity,
 	.token.url,
 	.language-css .token.string,
-	.style .token.string {
-		color: #f92672;
+	.style .token.string,
+	.token.variable {
+		color: #f8f8f2;
 	}
 
 	.token.atrule,
 	.token.attr-value,
 	.token.function,
 	.token.class-name {
-		color: #a6e22e;
+		color: #e6db74;
 	}
 
 	.token.keyword {
-		color: #f92672;
+		color: #66d9ef;
 	}
 
 	.token.regex,

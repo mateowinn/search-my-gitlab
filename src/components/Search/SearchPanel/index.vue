@@ -19,15 +19,12 @@
 
 		<!-- Search metadata, i.e. how many results we found -->
 		<SearchStats
-			v-if="projectsToShow && Object.keys(projectsToShow).length > 0 && !projectsToShow.none"
-			:results-count="resultsCount"
-			:some-have-more="someHaveMore"
-			:projects-with-results="projectsWithResults"
+			v-if="projectsToShow && projectsToShow.results && Object.keys(projectsToShow.results).length > 0 && !projectsToShow.none"
+			:results-count="projectsToShow.resultsCount"
+			:some-have-more="projectsToShow.someHaveMore"
+			:projects-with-results="projectsToShow.projectsWithResults"
 			:expand-all="expandAll"
 		/>
-
-		<!-- A small card that shows when syntax highlighting is unavailable because the browser sucks -->
-		<HighlightingUnavailable />
 
 		<!-- Loading bar and messages for *searches* -->
 		<SearchLoader v-if="loading" :projects-queried="projectsQueried" :query-time="queryTime" />
@@ -38,9 +35,9 @@
 		</div>
 
 		<SearchResultList
-			v-if="!loading && projectsToShow && Object.keys(projectsToShow).length > 0 && !projectsToShow.none"
+			v-if="!loading && projectsToShow && projectsToShow.results && Object.keys(projectsToShow.results).length > 0 && !projectsToShow.none"
 			:groups="groups"
-			:projects-to-show="projectsToShow"
+			:projects-to-show="projectsToShow.results"
 			:projects-queried="projectsQueried"
 			:results="results"
 			:get-project-by-ids="getProjectByIds"
@@ -89,13 +86,10 @@ export default {
 			searchQuery: '',
 			searchBranch: '',
 			confirmQuery: false,
-			pageSize: 20,
+			pageSize: 10,
 			results: {},
 			loading: false,
 			projectsQueried: {},
-			projectsWithResults: 0,
-			resultsCount: 0,
-			someHaveMore: false,
 			expandAll: false,
 			queryTime: 0
 		};
@@ -108,7 +102,7 @@ export default {
 		 * @returns {Object} - the search results we want to show according to the filters that the user has indicated. Is grouped by group and project.
 		 */
 		projectsToShow() {
-			const toShow = {};
+			const toShow = { results: {} };
 			// We also want to tally metadata
 			let resultsCount = 0;
 			let projectsWithResults = 0;
@@ -117,13 +111,13 @@ export default {
 			for (const group of this.groups) {
 				// Only show results for a group if a group has any results from its project searches
 				if (this.results[group.id]) {
-					toShow[group.id] = {};
+					toShow.results[group.id] = {};
 
 					for (const project of this.projects[group.id]) {
 						// Add each project with results that hasn't been filtered out
 						if (this.results[group.id][project.id]) {
 							const searchResults = this.results[group.id][project.id];
-							toShow[group.id][project.id] = searchResults;
+							toShow.results[group.id][project.id] = searchResults;
 
 							// Metadata additions!
 							resultsCount += searchResults.length;
@@ -137,18 +131,18 @@ export default {
 					}
 
 					// If it turns out that we didn't actually have any results in this group, kindly prevent the group from being shown
-					if (Object.keys(toShow[group.id]).length < 1) {
-						delete toShow[group.id];
+					if (Object.keys(toShow.results[group.id]).length < 1) {
+						delete toShow.results[group.id];
 					}
 				}
 			}
 
 			// Update some metadata to help the user
-			this.$set(this, 'resultsCount', resultsCount);
-			this.$set(this, 'projectsWithResults', projectsWithResults);
-			this.$set(this, 'someHaveMore', someHaveMore);
+			toShow.resultsCount = resultsCount;
+			toShow.projectsWithResults = projectsWithResults;
+			toShow.someHaveMore = someHaveMore;
 
-			if (Object.keys(toShow).length < 1 && Object.keys(this.projectsQueried).length > 0) {
+			if (Object.keys(toShow.results).length < 1 && Object.keys(this.projectsQueried).length > 0) {
 				// Show a no results message if we don't actually have any matching results to show
 				toShow.none = true;
 			}
@@ -234,13 +228,10 @@ export default {
 									.then((response) => {
 										// I don't really want this to pop up in the list if it didn't actually return anything
 										if (response.data && response.data.length > 0) {
-											this.$set(this.results, groupId, this.results[groupId] || {});
-											this.$set(this.results[groupId], project.id, response.data);
-
 											// Append a dynamic link to this in order to be able to just open it in a new tab
 											const { webUrl } = this.getProjectByIds(project.id);
-											for (let i = 0; i < this.results[groupId][project.id].length; i++) {
-												const result = this.results[groupId][project.id][i];
+											for (let i = 0; i < response.data.length; i++) {
+												const result = response.data[i];
 
 												// Yes, this is the Gitlab convention for accessing a single file in the branch
 												result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
@@ -251,16 +242,17 @@ export default {
 												if (extIndex > 0) {
 													result.ext = result.filename.substr(extIndex + 1);
 												} else {
-													result.ext = 'generic';
+													result.ext = 'plain';
 												}
 
 												// Also tag on the original index of each of these so that we have a unique tracking ID
 												result.index = i;
 											}
 
+											this.$set(this.results, groupId, this.results[groupId] || {});
+											this.$set(this.results[groupId], project.id, response.data);
+
 											// Update some metadata figures
-											this.resultsCount += response.data.length;
-											this.projectsWithResults += 1;
 											if (response.data.length === this.pageSize) {
 												this.$set(this.projectsQueried[project.id], 'hasMore', true);
 											}
@@ -276,7 +268,8 @@ export default {
 												query: this.searchQuery,
 												branch: this.searchBranch,
 												groupId: groupId,
-												projectId: project.id
+												projectId: project.id,
+												domain: this.conn.domain
 											},
 											'Error searching project'
 										);
@@ -312,7 +305,10 @@ export default {
 					// Fire them all off at the same time and wait for them all to resolve
 					await Promise.all(allSearchPromises);
 				} catch (e) {
-					logger.error({ error: e, query: this.searchQuery, branch: this.searchBranch }, 'Error executing searches');
+					logger.error(
+						{ error: e, query: this.searchQuery, branch: this.searchBranch, domain: this.conn.domain },
+						'Error executing searches'
+					);
 				}
 
 				// Turn off the loading animation
@@ -373,17 +369,15 @@ export default {
 				});
 
 				if (moreResults.data.length < 1) {
-					// Who knows? Maybe it had exactly results perfectly divisible by our page size.
+					// Who knows? Maybe it had exactly the number of results perfectly divisible by our page size.
 					this.$set(this.projectsQueried[projectId], 'done', true);
 					this.$set(this.projectsQueried[projectId], 'hasMore', false);
 				} else {
-					// Combine these results with the previous
-					this.$set(this.results[groupId], projectId, [...this.results[groupId][projectId], ...moreResults.data]);
-
 					// Append a dynamic link to this in order to be able to just open it in a new tab
 					const { webUrl } = this.getProjectByIds(projectId);
-					for (let i = 0; i < this.results[groupId][projectId].length; i++) {
-						const result = this.results[groupId][projectId][i];
+					const lastIndex = this.results[groupId][projectId].length;
+					for (let i = 0; i < moreResults.data.length; i++) {
+						const result = moreResults.data[i];
 
 						// Yes, this is the Gitlab convention for accessing a single file in the branch
 						result.url = `${webUrl}/-/blob/${result.ref}/${result.path}`;
@@ -394,12 +388,15 @@ export default {
 						if (extIndex > 0) {
 							result.ext = result.filename.substr(extIndex + 1);
 						} else {
-							result.ext = 'generic';
+							result.ext = 'plain';
 						}
 
 						// Also tag on the original index of each of these so that we have a unique tracking ID
-						result.index = i;
+						result.index = lastIndex + i;
 					}
+
+					// Combine these results with the previous
+					this.$set(this.results[groupId], projectId, [...this.results[groupId][projectId], ...moreResults.data]);
 
 					if (moreResults.data.length < this.pageSize) {
 						// Stop showing the load more button if there aren't more pages to fetch
@@ -412,7 +409,7 @@ export default {
 				this.$set(this.projectsQueried[projectId], 'done', true);
 
 				logger.error(
-					{ projectId, query: this.searchQuery, branch: this.searchBranch, error: e },
+					{ projectId, query: this.searchQuery, branch: this.searchBranch, error: e, domain: this.conn.domain },
 					'Failed to get additional results for project'
 				);
 			}
@@ -428,9 +425,6 @@ export default {
 			// Reset a bunch of figures related to our results
 			this.$set(this, 'results', {});
 			this.$set(this, 'projectsQueried', {});
-			this.$set(this, 'projectsWithResults', 0);
-			this.$set(this, 'resultsCount', 0);
-			this.$set(this, 'someHaveMore', false);
 			this.searchQuery = this.$route.query.search;
 
 			// Keep tabs, as well, on what branch we ought to be searching
@@ -475,9 +469,7 @@ export default {
 		SearchErrors,
 		SearchStats,
 		SearchLoader,
-		SearchResultList,
-		HighlightingUnavailable: () =>
-			import(/* webpackChunkName: "HighlightingUnavailable" */ 'components/Search/SearchPanel/HighlightingUnavailable')
+		SearchResultList
 	}
 };
 </script>
