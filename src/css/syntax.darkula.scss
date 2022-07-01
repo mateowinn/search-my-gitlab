@@ -1,9 +1,13 @@
 /**
- * Based on the Monokai theme for JavaScript, CSS and HTML
+ * prism.js Dark theme for JavaScript, CSS and HTML
+ * Based on the slides of the talk “/Reg(exp){2}lained/”
+ * @author Lea Verou
+ * Modified by mateowinn
  */
-.code-theme-monokai {
+.code-theme-darkula {
 	code[class*='language-'] {
-		font-family: 'Monaco', 'Menlo', courier, monospace;
+		text-shadow: 0 -0.1em 0.2em black;
+		font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
 		font-size: 1em;
 		text-align: left;
 		white-space: pre;
@@ -27,7 +31,7 @@
 	.code-line {
 		&-canvas {
 			color: #fff;
-			background: #000;
+			background: #4d4033;
 		}
 
 		&__number {
@@ -35,21 +39,19 @@
 		}
 
 		&__match {
-			background: #424242 !important;
+			background: #4d4033 !important;
 		}
 	}
 
 	.token.comment,
-	.token.hashbang,
 	.token.prolog,
 	.token.doctype,
 	.token.cdata {
-		color: #75715e;
+		color: hsl(30, 20%, 50%);
 	}
 
-	.token.punctuation,
-	.token.constant {
-		color: #f8f8f2;
+	.token.punctuation {
+		opacity: 0.7;
 	}
 
 	.token.namespace {
@@ -58,15 +60,11 @@
 
 	.token.property,
 	.token.tag,
-	.token.symbol,
-	.token.deleted,
-	.token.variable {
-		color: #66d9ef;
-	}
-
 	.token.boolean,
-	.token.number {
-		color: #ae81ff;
+	.token.number,
+	.token.constant,
+	.token.symbol {
+		color: hsl(350, 40%, 70%);
 	}
 
 	.token.selector,
@@ -75,31 +73,27 @@
 	.token.char,
 	.token.builtin,
 	.token.inserted {
-		color: #e6db74;
+		color: hsl(75, 70%, 60%);
 	}
 
 	.token.operator,
 	.token.entity,
 	.token.url,
 	.language-css .token.string,
-	.style .token.string {
-		color: #f92672;
+	.style .token.string,
+	.token.variable {
+		color: hsl(40, 90%, 60%);
 	}
 
 	.token.atrule,
 	.token.attr-value,
-	.token.function,
-	.token.class-name {
-		color: #a6e22e;
-	}
-
 	.token.keyword {
-		color: #f92672;
+		color: hsl(350, 40%, 70%);
 	}
 
 	.token.regex,
 	.token.important {
-		color: #fd971f;
+		color: #e90;
 	}
 
 	.token.important,
@@ -112,5 +106,9 @@
 
 	.token.entity {
 		cursor: help;
+	}
+
+	.token.deleted {
+		color: red;
 	}
 }
