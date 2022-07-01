@@ -36,8 +36,8 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 
 -   Tie show archived projects to URL parameter
 -   Break down components to be even more modular
+-   Add search history feature
 -   Flesh out README
--   Add feature to search out differences between branches in repositories
 -   Finish tests, of course
 -   Sync credentials between clients through login?
 
@@ -45,3 +45,4 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 
 -   Upgrade 404 page with gifs
 -   Allow domain tabs to be configurable in their order
+-   Add feature to search out differences between branches in repositories
