@@ -37,6 +37,8 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 -   Tie show archived projects to URL parameter
 -   Break down components to be even more modular
 -   Add search history feature
+-   Add "advanced search" options for specifying file extension or path (including filename)
+-   Build in rate limiting (default: 300 requests per minute/10 requests per second)
 -   Flesh out README
 -   Finish tests, of course
 -   Sync credentials between clients through login?
