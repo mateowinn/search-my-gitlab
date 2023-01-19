@@ -45,6 +45,7 @@ See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js
 
 ### Nice-to-Haves
 
+-   Add a help icon that loads tips about how best to utilize the tool?
 -   Upgrade 404 page with gifs
 -   Allow domain tabs to be configurable in their order
 -   Add feature to search out differences between branches in repositories

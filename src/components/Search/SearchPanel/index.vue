@@ -15,7 +15,7 @@
 		/>
 
 		<!-- Here we show the user if we failed to fetch results from any of the projects -->
-		<SearchErrors :loading="loading" :projects-queried="projectsQueried" :get-project-by-ids="getProjectByIds" />
+		<SearchErrors v-if="!limitsExceeded" :loading="loading" :projects-queried="projectsQueried" :get-project-by-ids="getProjectByIds" />
 
 		<!-- Search metadata, i.e. how many results we found -->
 		<SearchStats
@@ -30,8 +30,13 @@
 		<SearchLoader v-if="loading" :projects-queried="projectsQueried" :query-time="queryTime" />
 
 		<!-- Show a polite message if we actually have no results to show them -->
-		<div v-if="!loading && searchQuery && projectsToShow && projectsToShow.none" class="text-h6 text-center q-pt-md">
+		<div v-if="!loading && !limitsExceeded && searchQuery && projectsToShow && projectsToShow.none" class="text-h6 text-center q-pt-md">
 			Well, poop. We've got nothing that matches that criteria.
+		</div>
+
+		<!-- Let them know if execution has stopped prematurely -->
+		<div v-if="limitsExceeded" class="text-h6 text-center q-pt-md">
+			Search execution has been stopped early to allow for API recovery.
 		</div>
 
 		<SearchResultList
@@ -50,7 +55,6 @@
 </template>
 
 <script>
-import axios from 'axios';
 import logger from 'utilities/logger';
 import AddConnection from './AddConnection/index';
 import SearchBar from './SearchBar';
@@ -91,7 +95,8 @@ export default {
 			loading: false,
 			projectsQueried: {},
 			expandAll: false,
-			queryTime: 0
+			queryTime: 0,
+			limitsExceeded: false
 		};
 	},
 	computed: {
@@ -195,6 +200,7 @@ export default {
 			) {
 				this.queryTime = 0;
 				this.loading = true; // Show the loading animation
+				this.limitsExceeded = false;
 
 				logger.info(
 					{ query: this.searchQuery, branch: this.searchBranch, connIndex: this.conn.index, projects: projectsToSearch },
@@ -218,13 +224,14 @@ export default {
 
 							// Fire off a search for every project in every group that the user has specified
 							allSearchPromises.push(
-								axios({
-									method: 'get',
-									headers: {
-										'Private-Token': this.conn.token
-									},
-									url: searchUrl
-								})
+								this.conn
+									.axios({
+										method: 'get',
+										headers: {
+											'Private-Token': this.conn.token
+										},
+										url: searchUrl
+									})
 									.then((response) => {
 										// I don't really want this to pop up in the list if it didn't actually return anything
 										if (response.data && response.data.length > 0) {
@@ -262,6 +269,28 @@ export default {
 										// Tracking the failures so that we can show the user what we couldn't search
 										this.$set(this.projectsQueried[project.id], 'error', e);
 
+										let limitExceeded = e?.response?.status === 429;
+										if (limitExceeded && !this.limitsExceeded) {
+											this.limitsExceeded = true;
+											this.loading = false; // We want to stop trying to execute more requests because they're all gonna fail
+
+											// Let the user at least know basically WHY it failed
+											this.$q.notify({
+												color: 'negative',
+												message:
+													'Whoops. Looks like you have exceeded your Gitlab request limits. Wait a minute and try again. You might want to consider narrowing your search with the options in "Adjust Search Scope".',
+												position: 'top',
+												timeout: 15000,
+
+												actions: [
+													{
+														label: 'Dismiss',
+														color: 'white'
+													}
+												]
+											});
+										}
+
 										logger.error(
 											{
 												error: e,
@@ -269,7 +298,8 @@ export default {
 												branch: this.searchBranch,
 												groupId: groupId,
 												projectId: project.id,
-												domain: this.conn.domain
+												domain: this.conn.domain,
+												limitExceeded
 											},
 											'Error searching project'
 										);
@@ -360,7 +390,7 @@ export default {
 					searchUrl += `&ref=${this.searchBranch}`;
 				}
 
-				const moreResults = await axios({
+				const moreResults = await this.conn.axios({
 					method: 'get',
 					headers: {
 						'Private-Token': this.conn.token
