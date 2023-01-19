@@ -1,10 +1,12 @@
 import Vue from 'vue';
 import logger from 'utilities/logger';
 import axios from 'axios';
+import rateLimit from 'axios-rate-limit';
 import cloneObj from 'utilities/cloneObj';
 
 // Constants
 const STORED_CONNECTIONS = 'storedConnections';
+const DEFAULT_RATE_LIMITS = { maxRequests: 15, perMilliseconds: 1000 };
 
 // Our Group data definitions
 const connectionData = {
@@ -39,9 +41,15 @@ const Connection = new Vue({
 			if (existing) {
 				Object.assign(existing, connection);
 			} else {
-				// Push it into our list
+				// Its index is essentially its ID
 				const index = this.allConnections.length;
 				connection.index = index;
+
+				// Also, tie to it a rate-limited axios instance so that we can use that throughout
+				// By default we set it to max 15 requests per second
+				connection.axios = rateLimit(axios.create(), cloneObj(DEFAULT_RATE_LIMITS));
+
+				// Push it into our list
 				this.allConnections.push(connection);
 				this.$set(this.allConnections, index, connection); // To set reactive getters
 			}
@@ -141,6 +149,23 @@ const Connection = new Vue({
 		},
 
 		/**
+		 * Updates the indicated connection's axios instance to allow for a different rate limit
+		 *
+		 * @param {Int} index - the index of the connection we want to update
+		 * @param {Object} opts - an object containing the rate limit options we want to set, per https://www.npmjs.com/package/axios-rate-limit#usage
+		 */
+		updateAxiosOptions(index, opts) {
+			const conn = this.allConnections[index];
+
+			if (conn && conn.axios) {
+				conn.axios.setRateLimitOptions(opts);
+			} else if (conn && !conn.axios) {
+				// ...what?
+				conn.axios = rateLimit(axios.create(), cloneObj(DEFAULT_RATE_LIMITS));
+			}
+		},
+
+		/**
 		 * Attempts to load all previously defined connections from local storage
 		 */
 		loadStoredConns() {
@@ -149,8 +174,10 @@ const Connection = new Vue({
 			if (connStr) {
 				const storedConns = JSON.parse(connStr);
 
-				// Set this to our data variable
-				this.$set(this, 'allConnections', storedConns);
+				// Initialize these stored connections correctly on an individual basis
+				for (const conn of storedConns) {
+					this.setConnection(conn);
+				}
 			}
 		},
 

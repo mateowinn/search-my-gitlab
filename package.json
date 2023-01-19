@@ -1,6 +1,6 @@
 {
 	"name": "search-my-gitlab",
-	"version": "0.22.1",
+	"version": "0.23.0",
 	"description": "An interface for searching all of your Gitlab repositories at once, since this is a feature not available in standard Gitlab.",
 	"productName": "Search My Gitlab",
 	"author": "Matt Winn <mateowinn@gmail.com>",
@@ -17,6 +17,7 @@
 		"@quasar/extras": "^1.10.4",
 		"apollo-boost": "^0.4.9",
 		"axios": "^0.21.1",
+		"axios-rate-limit": "^1.3.0",
 		"core-js": "^3.11.0",
 		"graphql": "^15.5.1",
 		"graphql-tag": "^2.12.4",

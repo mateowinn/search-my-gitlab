@@ -1,7 +1,9 @@
 import Vue from 'vue';
 import logger from 'utilities/logger';
-import axios from 'axios';
 import cloneObj from 'utilities/cloneObj';
+
+// Constants
+const ALL_PROJECTS = 'allProjects';
 
 // Our Project data definitions
 const projectData = {
@@ -36,11 +38,14 @@ const Project = new Vue({
 		 */
 		projects() {
 			return (conn) => {
-				if (this.allProjects[conn.index] === undefined && !this.fetched[conn.index]) {
-					// Mark this as fetch initiated
+				if (!this.fetched[conn.index]) {
+					// Mark this fetch as initiated
 					this.$set(this.fetched, conn.index, true);
-					this.$set(this.allProjects, conn.index, []);
 					this.$set(this.pageErrors, conn.index, {});
+
+					if (this.allProjects[conn.index] === undefined) {
+						this.$set(this.allProjects, conn.index, []);
+					}
 
 					// Recursively fetch all projects
 					this.fetchProjectsByPage(conn);
@@ -60,11 +65,12 @@ const Project = new Vue({
 		 * @param {Int} page - the page (of 100s) that we should be fetching this time around
 		 */
 		fetchProjectsByPage(conn, results = [], page = 1) {
-			axios({
+			conn.axios({
 				method: 'get',
 				headers: {
 					'Private-Token': conn.token
 				},
+				exposedHeaders: ['ratelimit-limit'],
 				url: `${conn.domain}/api/v4/projects?membership=true&per_page=100&page=${page}`
 			})
 				.then((response) => {
@@ -91,6 +97,9 @@ const Project = new Vue({
 						this.fetchProjectsByPage(conn, results, page + 1);
 					} else {
 						this.$set(this.allProjects, conn.index, results);
+
+						// We also want to set this into localStorage for faster retrieval next time
+						window.localStorage.setItem(ALL_PROJECTS, JSON.stringify(this.allProjects));
 					}
 				})
 				.catch((e) => {
@@ -132,6 +141,23 @@ const Project = new Vue({
 		},
 
 		/**
+		 * Attempts to load all previously fetched projects from local storage
+		 */
+		loadProjectsFromStorage() {
+			const projectsStr = window.localStorage.getItem(ALL_PROJECTS);
+
+			if (projectsStr) {
+				this.$set(this, 'allProjects', JSON.parse(projectsStr));
+
+				// In order to avoid throwing a bunch of exceptions because we have projects but didn't actually do any fetching, we need to setup the other objects, too
+				for (const idx of Object.keys(this.allProjects)) {
+					this.$set(this.fetched, idx, false);
+					this.$set(this.pageErrors, idx, {});
+				}
+			}
+		},
+
+		/**
 		 * Wipes everything out that we have available directly through our props
 		 */
 		clearAll() {
@@ -140,6 +166,10 @@ const Project = new Vue({
 				this.$set(this, prop, dataClone[prop]);
 			}
 		}
+	},
+	created() {
+		// On initialization, let's try to pre-load projects so there isn't a huge delay for users with lots of projects
+		this.loadProjectsFromStorage();
 	}
 });
 
